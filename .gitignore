@@ -1,0 +1,59 @@
+# ─────────── SECRETS ─────────── #
+# Never commit any .env files anywhere in the tree.
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# ─────────── OS / EDITOR ─────────── #
+.DS_Store
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+
+# ─────────── NODE / NEXT ─────────── #
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# ─────────── FOUNDRY ─────────── #
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+contracts/forge-cache/
+contracts/coverage/
+
+# ─────────── AGENT BUILD ─────────── #
+agent/dist/
+agent/*.log
+
+# ─────────── LOGS / TMP ─────────── #
+*.log
+*.pid
+*.seed
+*.pid.lock
+.turbo/
+tmp/
+.cache/
+
+# ─────────── LOCAL DB ─────────── #
+# SQLite DB lives in ~/brain/.agentfloat.db by default — never commit a DB anyway
+*.sqlite
+*.sqlite-journal
+*.db
+*.db-journal
+
+# ─────────── BRAIN OWN OUTPUTS ─────────── #
+# The brain is a sibling project (~/brain/) — don't accidentally vendor it
+brain/
+
+# ─────────── NEXT DEPLOY / VERCEL ─────────── #
+.vercel/
+
+# ─────────── MISC ─────────── #
+*.local
+.env.production
