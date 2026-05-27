@@ -98,6 +98,23 @@ Expected cost: ~8M gas at ~0.1 gwei ≈ **0.0008 OKB (~$0.20)**.
 
 ---
 
+## Deployed contracts — X Layer **Mainnet** (chain 196) ⚡
+
+| Contract | Address | Bytecode size |
+|----------|---------|---------|
+| **FloatVault** | [`0x42Ff0c72A17d5b13bf01a20B194b0D1fe43e50BF`](https://www.oklink.com/xlayer/address/0x42Ff0c72A17d5b13bf01a20B194b0D1fe43e50BF) | 5,115 b |
+| **AgentFloatHook** | [`0x010023fcb7Cc4a6f4f867D3AF0C428d80d2B8580`](https://www.oklink.com/xlayer/address/0x010023fcb7Cc4a6f4f867D3AF0C428d80d2B8580) | 5,101 b |
+| IdleStrategy | [`0xBC049aAD700ee69a72bedF7AE7032e462450Fb5d`](https://www.oklink.com/xlayer/address/0xBC049aAD700ee69a72bedF7AE7032e462450Fb5d) | 939 b |
+| AaveStrategy (real Aave V3 USDT) | [`0x1f34e7b58A81a84Def4fdE0ED23daE4B60c500cf`](https://www.oklink.com/xlayer/address/0x1f34e7b58A81a84Def4fdE0ED23daE4B60c500cf) | 2,429 b |
+
+The hook address ends in `0x...8580` — the low 14 bits encode the permission flags `0x580` (afterAddLiquidity + afterRemoveLiquidity + beforeSwap). Verified via `Hooks.validateHookPermissions` in the canonical `BaseHook` constructor.
+
+Total mainnet deploy cost: **0.000372 OKB (~$0.09)** at 0.02 gwei.
+
+The vault attaches to the canonical Uniswap v4 PoolManager (`0x360E68fa…b9FB32`) and routes idle USDT through Aave V3 (`0xE3F3Caef…84F116`). The IdleStrategy is the active baseline; the AaveStrategy starts as shadow and earns its way to active via the on-chain `consecutiveWins` counter.
+
+---
+
 ## Deployed contracts — X Layer Testnet (chain 1952)
 
 | Contract | Address |

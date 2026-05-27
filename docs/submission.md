@@ -12,14 +12,30 @@ A Uniswap v4 hook on X Layer that routes out-of-range LP capital into a self-imp
 https://github.com/ronkenx9/agentfloat-hook
 
 **Primary verifiable contract address (the Hook):**
-0x3A00B5A2F15bE68AfE5415290ca4D3022e3B3b5F
-https://www.oklink.com/xlayer-test/address/0x3A00B5A2F15bE68AfE5415290ca4D3022e3B3b5F
+**MAINNET:** `0x010023fcb7Cc4a6f4f867D3AF0C428d80d2B8580` — https://www.oklink.com/xlayer/address/0x010023fcb7Cc4a6f4f867D3AF0C428d80d2B8580
+TESTNET: `0x3A00B5A2F15bE68AfE5415290ca4D3022e3B3b5F` — https://www.oklink.com/xlayer-test/address/0x3A00B5A2F15bE68AfE5415290ca4D3022e3B3b5F
 
 **Demo video:**
 [TBD — record per `docs/video_script.md`, upload as unlisted YouTube, paste link here]
 
 **Project X account:**
 [TBD — create handle, post the tweet thread in `docs/tweet_thread.md`, paste profile URL here]
+
+---
+
+## ⚡ Deployed contracts — X Layer **Mainnet** (chain 196)
+
+| Role | Address |
+|------|---------|
+| **FloatVault** | [`0x42Ff0c72A17d5b13bf01a20B194b0D1fe43e50BF`](https://www.oklink.com/xlayer/address/0x42Ff0c72A17d5b13bf01a20B194b0D1fe43e50BF) |
+| **AgentFloatHook** | [`0x010023fcb7Cc4a6f4f867D3AF0C428d80d2B8580`](https://www.oklink.com/xlayer/address/0x010023fcb7Cc4a6f4f867D3AF0C428d80d2B8580) |
+| IdleStrategy | [`0xBC049aAD700ee69a72bedF7AE7032e462450Fb5d`](https://www.oklink.com/xlayer/address/0xBC049aAD700ee69a72bedF7AE7032e462450Fb5d) |
+| AaveStrategy | [`0x1f34e7b58A81a84Def4fdE0ED23daE4B60c500cf`](https://www.oklink.com/xlayer/address/0x1f34e7b58A81a84Def4fdE0ED23daE4B60c500cf) |
+| Uniswap v4 PoolManager (canonical) | [`0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32`](https://www.oklink.com/xlayer/address/0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32) |
+| Aave V3 Pool (USDT reserve) | [`0xE3F3Caefdd7180F884c01E57f65Df979Af84f116`](https://www.oklink.com/xlayer/address/0xE3F3Caefdd7180F884c01E57f65Df979Af84f116) |
+| USDT (underlying) | [`0x779Ded0c9e1022225f8E0630b35a9b54bE713736`](https://www.oklink.com/xlayer/address/0x779Ded0c9e1022225f8E0630b35a9b54bE713736) |
+
+Total deploy cost: **0.000372 OKB (~$0.09)**. The mainnet build uses real USDT routed through real Aave V3, attaches to the canonical Uniswap v4 PoolManager (no PoolManager redeploy needed). The AI operating mode is bounded to `register_strategy / retire / scoring_change / no_action` on chain 196 — new Solidity to mainnet requires human review per `chain_actions_allowed`.
 
 ---
 
