@@ -57,3 +57,7 @@ brain/
 # ─────────── MISC ─────────── #
 *.local
 .env.production
+
+# Twitter banner export artefacts (saved from x.com)
+web/x banner*
+*_files/
