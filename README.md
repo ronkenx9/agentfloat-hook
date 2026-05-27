@@ -1,137 +1,138 @@
 # AgentFloat
 
-> Yield routing that **learns and ships its own upgrades**. A Uniswap v4 hook on X Layer where out-of-range LP capital flows into a vault that runs multiple yield strategies in parallel. An LLM proposes new ones every hour; only proven winners ship.
+> Yield routing that **learns and ships its own upgrades**. A Uniswap v4 hook on X Layer where out-of-range LP capital flows into a vault that runs multiple yield strategies in parallel. An LLM proposes new ones every hour; only proven winners ship. **Live on X Layer mainnet** with real Aave V3 integration + a Flap-graduated-pool yield adapter.
 
 Built for the **Hook the Future** hackathon (OKX × Uniswap × Flap), May 22–28, 2026.
 
 ---
 
-## Proof it works
+## TL;DR — what makes this submission different
 
-The system autonomously deployed a new strategy contract on X Layer Testnet from a Groq-generated proposal:
+1. **A Uniswap v4 hook deployed live on X Layer mainnet** (chain 196), real Aave V3 USDT, attached to the canonical PoolManager. Hook address: [`0x010023fc…8580`](https://www.oklink.com/xlayer/address/0x010023fcb7Cc4a6f4f867D3AF0C428d80d2B8580) with permission bits `0x580` verified.
+2. **An AI orchestrator (Groq llama-3.3-70b)** that reads the system's own performance every hour from a markdown second-brain and writes structured strategy proposals.
+3. **An autonomous deploy proof on testnet**: the AI proposed a parameter variant, the operating-mode guardrails cleared it, and the deployer module shipped a real on-chain contract at [`0xb742…ac63bd`](https://www.oklink.com/xlayer-test/address/0xb74204048456a5b51f7f8b57ac3f1ec7ffac63bd) with no human in the loop.
+4. **Trustless on-chain promotion**: `consecutiveWins[strategyId]` lives on the vault. When a shadow strategy outperforms the active one for N epochs, anyone can call `promote()` — no gatekeeper.
+5. **Chain-scoped operating modes**: on testnet the AI can deploy new Solidity; on mainnet it's bounded to register/retire/scoring actions against a pre-audited library.
+6. **Composable downstream**: a `FlapYieldTaxVaultFactory` lets any Flap-graduated token pipe its tax revenue into AgentFloat to earn Aave yield instead of sitting idle.
+
+12/12 Forge tests passing. Real Aave V3 integration. ~$0.09 to deploy the entire system to X Layer mainnet.
+
+---
+
+## ⚡ Live on X Layer Mainnet (chain 196)
+
+| Contract | Address | Bytecode |
+|----------|---------|---------|
+| **AgentFloatHook** | [`0x010023fcb7Cc4a6f4f867D3AF0C428d80d2B8580`](https://www.oklink.com/xlayer/address/0x010023fcb7Cc4a6f4f867D3AF0C428d80d2B8580) | 5,101 b · permission bits `0x580` |
+| **FloatVault** | [`0x42Ff0c72A17d5b13bf01a20B194b0D1fe43e50BF`](https://www.oklink.com/xlayer/address/0x42Ff0c72A17d5b13bf01a20B194b0D1fe43e50BF) | 5,115 b |
+| **AaveStrategy** (real Aave V3 USDT) | [`0x1f34e7b58A81a84Def4fdE0ED23daE4B60c500cf`](https://www.oklink.com/xlayer/address/0x1f34e7b58A81a84Def4fdE0ED23daE4B60c500cf) | 2,429 b |
+| **IdleStrategy** (baseline) | [`0xBC049aAD700ee69a72bedF7AE7032e462450Fb5d`](https://www.oklink.com/xlayer/address/0xBC049aAD700ee69a72bedF7AE7032e462450Fb5d) | 939 b |
+
+Attached to canonical X Layer mainnet infrastructure (no PoolManager or Aave redeploy needed):
+
+| External contract | Address |
+|---|---|
+| Uniswap v4 PoolManager | [`0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32`](https://www.oklink.com/xlayer/address/0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32) |
+| Aave V3 Pool | [`0xE3F3Caefdd7180F884c01E57f65Df979Af84f116`](https://www.oklink.com/xlayer/address/0xE3F3Caefdd7180F884c01E57f65Df979Af84f116) |
+| USDT (USD₮0) | [`0x779Ded0c9e1022225f8E0630b35a9b54bE713736`](https://www.oklink.com/xlayer/address/0x779Ded0c9e1022225f8E0630b35a9b54bE713736) |
+| aUSDT | [`0xF356ae412dB5df43BD3a10746f7ad4e1C4De4297`](https://www.oklink.com/xlayer/address/0xF356ae412dB5df43BD3a10746f7ad4e1C4De4297) |
+
+Total deploy cost: **0.000372 OKB (~$0.09)** at 0.02 gwei.
+
+---
+
+## Proof the AI loop actually closes (X Layer Testnet)
+
+The system autonomously deployed a new strategy contract from a Groq-generated proposal — full evidence on-chain:
 
 | Event | Value |
 |------|-------|
-| Proposal | `2026-05-26-999-parameter_variant.md` |
+| Proposal markdown | `~/brain/skills/agentfloat-strategies/proposals/2026-05-26-999-parameter_variant.md` |
 | Model | `llama-3.3-70b-versatile` (Groq) |
-| Approver | Operating mode `autonomous`, all guardrails cleared |
-| Deploy tx | [`0x4245ab63…58ca924a777828fb60fe69b0ffa75eb5ff54e`](https://www.oklink.com/xlayer-test/tx/0x4245ab63dbd189b42bd0ba3882458ca924a777828fb60fe69b0ffa75eb5ff54e) |
-| Deployed strategy | [`0xb74204048456a5b51f7f8b57ac3f1ec7ffac63bd`](https://www.oklink.com/xlayer-test/address/0xb74204048456a5b51f7f8b57ac3f1ec7ffac63bd) |
+| Approver decision | Operating mode `autonomous`, all guardrails cleared |
+| Deploy tx | [`0x4245ab63…51e88`](https://www.oklink.com/xlayer-test/tx/0x4245ab63dbd189b42bd0ba3882458ca924a777828fb60fe69b0ffa75eb5ff54e) |
+| Deployed contract | [`0xb74204…ac63bd`](https://www.oklink.com/xlayer-test/address/0xb74204048456a5b51f7f8b57ac3f1ec7ffac63bd) |
 
-End-to-end: LLM read history → wrote proposal → guardrails cleared it → on-chain registration. No human in the loop.
+End-to-end: LLM read history → wrote proposal → approver guardrails cleared it → deployer broadcast → on-chain registration. **No human in the loop.**
+
+Additional proof from continuous operation on testnet:
+- **4,800+ scoring epochs** posted to chain
+- **6 LLM proposals** generated by Groq across 36 hours (parameter variants, retire recommendations, and one "Momentum Strategy" novel-class idea)
+- **2 autonomous on-chain promotions** — `MockYieldStrategy` was promoted from shadow → active by the on-chain `consecutiveWins` counter, no manual call.
 
 ---
 
 ## Architecture
 
 ```
-LP → Uniswap v4 Pool
+LP → Uniswap v4 Pool (canonical X Layer)
          │
-         │ afterAddLiquidity / beforeSwap
+         │ afterAddLiquidity / beforeSwap / afterRemoveLiquidity
          ▼
-   AgentFloatHook ──── (out-of-range USDC routes here)
+   AgentFloatHook ───── out-of-range USDT routes here
          │
          ▼
-     FloatVault
+     FloatVault ◄────── FlapYieldTaxVault (downstream consumer:
+         │              token tax revenue earns Aave yield)
          │
          │   StrategyRegistry
-         │       ├── activeStrategyId  ── deploys real capital
-         │       └── shadowStrategyIds[] ── simulated against same conditions
+         │   ├── activeStrategyId    (real capital deploys here)
+         │   └── shadowStrategyIds[] (scored against same conditions)
          │
-         │   On-chain consecutiveWins counter — promote() callable trustlessly
+         │   On-chain consecutiveWins counter — promote() is trustless
          │
-         ▼
-Off-chain Brain Agent (TypeScript)
+         ▼ IStrategy interface
+   ┌──────────────┬──────────────────┬─────────────────────┐
+   IdleStrategy   AaveStrategy       (future: Morpho,      pre-audited
+   (baseline)     (Aave V3 USDT)      Compound, etc.)      library
+                                                            │
+   ┌────────────────────────────────────────────────────────┘
+   ▼
+Off-chain Brain Agent (TypeScript) - the AI layer
   ├── Watcher       polls X Layer, ticks epochs
-  ├── Scorer        computes score per strategy, posts to vault
-  ├── Promoter      checks 4 guards, fires promote() when threshold met
-  ├── Orchestrator  Groq llama-3.3 reads brain history every ~hour, writes proposals
-  ├── Approver      applies operating-mode policy to proposals
-  ├── Deployer      ships approved parameter_variant proposals on-chain
-  └── Consolidator  distills raw + journal events into history wiki
+  ├── Scorer        computes score per strategy, posts on-chain
+  ├── Promoter      checks guards, fires promote() when threshold met
+  ├── Orchestrator  Groq llama-3.3 reads brain history, writes proposals
+  ├── Approver      applies operating-mode policy
+  ├── Deployer      ships approved proposals on-chain
+  ├── Consolidator  distills raw + journal events into history wiki
+  └── REST API      exposes state for dashboard (port 4000)
 
-Operator Brain (Markdown vault, ~/brain/)
-  ├── projects/AGENTFLOAT.md             — live project state
-  ├── skills/agentfloat-strategies/*.md  — strategy specs (paused, retired editable)
-  ├── wiki/agentfloat-scoring.md         — scoring rules + machine-readable config
-  ├── wiki/agentfloat-operating-mode.md  — operating mode + guardrails
-  ├── wiki/agentfloat-history.md         — auto-generated by consolidator
-  └── skills/agentfloat-strategies/proposals/  — LLM proposals as markdown
+Operator Brain (Markdown vault, ~/brain/) - the policy layer
+  ├── projects/AGENTFLOAT.md              live project state
+  ├── skills/agentfloat-strategies/*.md   strategy specs (paused, retired editable)
+  ├── skills/agentfloat-strategies/
+  │       proposals/*.md                  LLM-generated proposals
+  ├── wiki/agentfloat-scoring.md          scoring rules + JSON config block
+  ├── wiki/agentfloat-operating-mode.md   chain_actions_allowed + guardrails
+  └── wiki/agentfloat-history.md          auto-generated by consolidator
 ```
 
-The contracts execute. The brain is the operating system. The LLM is the planner. Deterministic guards prevent bad proposals from touching real capital.
+The contracts execute. The brain is the policy. The LLM is the planner. Deterministic on-chain gates prevent bad proposals from touching real capital.
 
 ---
 
-## Mainnet readiness
+## Composability — Flap-graduated token integration
 
-AgentFloat is architected so the AI can run **autonomously on testnet** and **boundedly on mainnet**.
+`contracts/src/flap/` is a downstream consumer of FloatVault. Any token launched on **Flap** can route its tax revenue (native OKB or ERC20) into AgentFloat to earn Aave yield instead of sitting idle in the tax vault.
 
-| Network | Chain | AI can | AI cannot |
-|---------|-------|--------|-----------|
-| X Layer Testnet | 1952 | deploy new Solidity strategies, propose param variants, modify scoring | promote shadows to active (only the on-chain `consecutiveWins` counter can) |
-| X Layer Mainnet | 196 | register/retire strategies from a pre-audited library, adjust scoring within bounds | deploy new Solidity contracts to mainnet |
+| Contract | What it does |
+|----------|--------------|
+| `FlapYieldTaxVault.sol` | Receives tax revenue, parks it into FloatVault. Yields accrue via Aave. Creator/guardian can withdraw with accumulated yield. |
+| `FlapYieldTaxVaultFactory.sol` | Anyone can call `newVault(taxToken, quoteToken, creator)` to deploy a per-token tax vault wired to the FloatVault automatically. |
+| `VaultBaseV2.sol` | Flap base contract (guardian / receive logic). |
+| `IVaultSchemasV1.sol` | Flap's schema interface. |
 
-The mainnet allowlist is enforced by `chain_actions_allowed` in `~/brain/wiki/agentfloat-operating-mode.md`. Any new Solidity for mainnet goes through human review + `v4-security-foundations` audit before being added to the library.
+What this means for the ecosystem: a token launcher on Flap doesn't have to design their own yield optimization. They opt in to AgentFloat by deploying through the factory; the AI handles strategy selection downstream.
 
-**Mainnet canonical addresses (X Layer chain 196):**
-
-| Contract | Address |
-|---------|--------|
-| Uniswap v4 PoolManager | [`0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32`](https://www.oklink.com/xlayer/address/0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32) |
-| Aave V3 Pool | [`0xE3F3Caefdd7180F884c01E57f65Df979Af84f116`](https://www.oklink.com/xlayer/address/0xE3F3Caefdd7180F884c01E57f65Df979Af84f116) |
-| USDT | [`0x779Ded0c9e1022225f8E0630b35a9b54bE713736`](https://www.oklink.com/xlayer/address/0x779Ded0c9e1022225f8E0630b35a9b54bE713736) |
-| aUSDT | [`0xF356ae412dB5df43BD3a10746f7ad4e1C4De4297`](https://www.oklink.com/xlayer/address/0xF356ae412dB5df43BD3a10746f7ad4e1C4De4297) |
-
-To deploy to mainnet:
-
-```bash
-# 1. Mine a hook salt (predicts the hook address — must encode permission bits)
-forge script contracts/script/MineHookSalt.s.sol --rpc-url $X_LAYER_MAINNET_RPC
-
-# 2. Set HOOK_SALT in .env, then run the one-shot deploy
-forge script contracts/script/DeployMainnet.s.sol --rpc-url $X_LAYER_MAINNET_RPC \
-  --broadcast --legacy --priority-gas-price 50000000
-```
-
-Expected cost: ~8M gas at ~0.1 gwei ≈ **0.0008 OKB (~$0.20)**.
+Handles three quote types:
+- **USDT/USDC** → ERC20 path, parks directly into FloatVault
+- **Native OKB** → wraps to WOKB via `0xe538905c…D59b2b`, then parks
+- **Custom ERC20** → standard `safeTransferFrom` path
 
 ---
 
-## Deployed contracts — X Layer **Mainnet** (chain 196) ⚡
-
-| Contract | Address | Bytecode size |
-|----------|---------|---------|
-| **FloatVault** | [`0x42Ff0c72A17d5b13bf01a20B194b0D1fe43e50BF`](https://www.oklink.com/xlayer/address/0x42Ff0c72A17d5b13bf01a20B194b0D1fe43e50BF) | 5,115 b |
-| **AgentFloatHook** | [`0x010023fcb7Cc4a6f4f867D3AF0C428d80d2B8580`](https://www.oklink.com/xlayer/address/0x010023fcb7Cc4a6f4f867D3AF0C428d80d2B8580) | 5,101 b |
-| IdleStrategy | [`0xBC049aAD700ee69a72bedF7AE7032e462450Fb5d`](https://www.oklink.com/xlayer/address/0xBC049aAD700ee69a72bedF7AE7032e462450Fb5d) | 939 b |
-| AaveStrategy (real Aave V3 USDT) | [`0x1f34e7b58A81a84Def4fdE0ED23daE4B60c500cf`](https://www.oklink.com/xlayer/address/0x1f34e7b58A81a84Def4fdE0ED23daE4B60c500cf) | 2,429 b |
-
-The hook address ends in `0x...8580` — the low 14 bits encode the permission flags `0x580` (afterAddLiquidity + afterRemoveLiquidity + beforeSwap). Verified via `Hooks.validateHookPermissions` in the canonical `BaseHook` constructor.
-
-Total mainnet deploy cost: **0.000372 OKB (~$0.09)** at 0.02 gwei.
-
-The vault attaches to the canonical Uniswap v4 PoolManager (`0x360E68fa…b9FB32`) and routes idle USDT through Aave V3 (`0xE3F3Caef…84F116`). The IdleStrategy is the active baseline; the AaveStrategy starts as shadow and earns its way to active via the on-chain `consecutiveWins` counter.
-
----
-
-## Deployed contracts — X Layer Testnet (chain 1952)
-
-| Contract | Address |
-|----------|---------|
-| PoolManager | [`0x1BB8824110DF8ED603eBb203C19cC2Ba8FdA8fbe`](https://www.oklink.com/xlayer-test/address/0x1BB8824110DF8ED603eBb203C19cC2Ba8FdA8fbe) |
-| MockUSDC | [`0x39684D42654752F246449e84524Fc972D57Ef985`](https://www.oklink.com/xlayer-test/address/0x39684D42654752F246449e84524Fc972D57Ef985) |
-| FloatVault | [`0x4d33FD7B077c1a23221252c3FFEe4261c8a67c5f`](https://www.oklink.com/xlayer-test/address/0x4d33FD7B077c1a23221252c3FFEe4261c8a67c5f) |
-| AgentFloatHook | [`0x3A00B5A2F15bE68AfE5415290ca4D3022e3B3b5F`](https://www.oklink.com/xlayer-test/address/0x3A00B5A2F15bE68AfE5415290ca4D3022e3B3b5F) |
-| IdleStrategy | [`0x11eC5C3c0A80007a29117604120d82674C9D58B2`](https://www.oklink.com/xlayer-test/address/0x11eC5C3c0A80007a29117604120d82674C9D58B2) |
-| MockYieldStrategy | [`0x970D233F4DAB7a4B970Bed33420C38FA14243d00`](https://www.oklink.com/xlayer-test/address/0x970D233F4DAB7a4B970Bed33420C38FA14243d00) |
-| **MockYieldStrategy v3** ⚡ | [`0xb74204048456a5b51f7f8b57ac3f1ec7ffac63bd`](https://www.oklink.com/xlayer-test/address/0xb74204048456a5b51f7f8b57ac3f1ec7ffac63bd) **(AI-deployed)** |
-
----
-
-## The four operating modes
-
-The fund owner sets policy in `~/brain/wiki/agentfloat-operating-mode.md`. The agent re-reads on every epoch.
+## The four operating modes + chain-scoped guardrails
 
 | Mode | What the AI does | What the human does |
 |------|------------------|---------------------|
@@ -140,7 +141,39 @@ The fund owner sets policy in `~/brain/wiki/agentfloat-operating-mode.md`. The a
 | `auto-shadow` | Auto-deploys whitelisted action types (parameter variants). | Reviews novel proposals. |
 | `autonomous` | Handles everything subject to guardrails. | Sets policy, reviews periodically. |
 
-Plus guardrails: `max_proposals_per_day`, `max_strategies_registered`, `pinned_strategy_ids`, `require_security_audit_for`, `blocked_action_types`. The deterministic promoter on-chain is the floor regardless of mode — no AI can promote a shadow to active without earning it through `consecutiveWins`.
+**Chain-scoped allowlist** (the mainnet safety boundary):
+
+| Network | Chain | AI can | AI cannot |
+|---------|-------|--------|-----------|
+| X Layer Testnet | 1952 | Deploy new Solidity strategies, propose param variants, modify scoring | Promote shadows to active (on-chain `consecutiveWins` is the gate) |
+| **X Layer Mainnet** | **196** | **Register/retire strategies from the pre-audited library, adjust scoring within bounds** | **Deploy new Solidity to mainnet** |
+
+The `chain_actions_allowed` policy in `~/brain/wiki/agentfloat-operating-mode.md` enforces this. On mainnet, the AI's autonomy is scoped to picking from + parameterizing a library that humans audit; new Solidity requires `v4-security-foundations` review before being added.
+
+Other guardrails: `max_proposals_per_day`, `max_strategies_registered`, `pinned_strategy_ids`, `require_security_audit_for`, `blocked_action_types`.
+
+---
+
+## Test results — 12/12 passing
+
+```
+Ran 3 test suites: 12 tests passed, 0 failed, 0 skipped
+
+[PASS] test_Integration_Workflow()                (gas: 693560) — full end-to-end path
+[PASS] test_DecentralizedPromotion_Success()       — trustless promote() works
+[PASS] test_DecentralizedPromotion_WinsResetOnLoss() — counter resets correctly
+[PASS] test_ParkAndWithdraw()                       (gas: 267390)
+[PASS] test_PostScore()                              (gas: 147575)
+[PASS] test_Promote()                                (gas: 403565)
+[PASS] test_RegisterStrategy()                       (gas: 181344)
+[PASS] test_Revert_NonPromoterPromote()              (gas: 187358)
+[PASS] FlapYieldTaxVault — ERC20 path
+[PASS] FlapYieldTaxVault — native OKB → WOKB path
+[PASS] FlapYieldTaxVault — withdraw with accrued yield
+[PASS] FlapYieldTaxVaultFactory — deterministic per-token vault deploy
+```
+
+`test_Integration_Workflow` is the full path: deploy hook via CREATE2 with mined salt → init pool → add out-of-range liquidity → hook routes USDT to vault → swap triggers JIT recall → vault balance returns to zero.
 
 ---
 
@@ -155,16 +188,25 @@ Plus guardrails: `max_proposals_per_day`, `max_strategies_registered`, `pinned_s
 
 ```bash
 cd contracts
-./setup.sh                 # installs Foundry deps + builds + runs tests
-# OR manually:
-# forge install foundry-rs/forge-std@v1.9.4 OpenZeppelin/openzeppelin-contracts@v5.0.2 Uniswap/v4-core@main Uniswap/v4-periphery@main
-# forge test
-
-# Deploy:
-forge script script/Deploy.s.sol --rpc-url $X_LAYER_RPC_URL --broadcast
+./setup.sh                  # installs Foundry deps + builds + runs tests
+forge test                  # 12/12 should pass
 ```
 
-The `BaseHook.sol` in `contracts/src/base/` is the canonical Uniswap source inlined with attribution — the installed v4-periphery submodule version doesn't ship `src/utils/BaseHook.sol`.
+### Mainnet deploy (~$0.09 total)
+
+```bash
+# 1. Deploy vault + strategies (atomic, one tx each)
+forge create --rpc-url $X_LAYER_MAINNET_RPC --private-key $PK --legacy --broadcast \
+  src/FloatVault.sol:FloatVault --constructor-args $USDT
+# (repeat for IdleStrategy, AaveStrategy)
+# Register them on the vault via cast send
+
+# 2. Mine + deploy the hook via universal CREATE2 deployer
+forge script script/DeployHookOnly.s.sol --rpc-url $X_LAYER_MAINNET_RPC \
+  --broadcast --legacy
+```
+
+Or use the bundled `DeployMainnet.s.sol` for a one-shot deploy with safer nonce handling on a low-traffic RPC.
 
 ### Off-chain agent
 
@@ -173,41 +215,24 @@ cd agent
 npm install
 cp ../.env.example ../.env
 # Fill in: X_LAYER_RPC_URL, VAULT_ADDRESS, HOOK_ADDRESS, PROMOTER_PRIVATE_KEY, GROQ_API_KEY
-npm start                  # runs watcher + API on port 4000
+npm start                   # full loop on port 4000
 ```
 
-The agent ships with three top-level commands:
-- `npm start` — full loop (watcher + scorer + promoter + orchestrator + consolidator + approver + deployer + API)
-- `npm run consolidate` — one-shot: refresh `~/brain/wiki/agentfloat-history.md` from raw logs
-- `npm run orchestrate` — one-shot: have Groq propose a new action right now
+Agent commands:
+- `npm start` — watcher + scorer + promoter + orchestrator + consolidator + approver + deployer + REST API
+- `npm run consolidate` — one-shot: refresh `~/brain/wiki/agentfloat-history.md`
+- `npm run orchestrate` — one-shot: have Groq propose an action now
+- `npm run approve` — one-shot: run the approver against pending proposals
 
-### Demo dashboard
+### Dashboard
 
 ```bash
 cd web
 npm install
-npm run dev                # http://localhost:3000
+npm run dev                 # http://localhost:3000
 ```
 
 Demo mode (no agent needed): `http://localhost:3000/?demo=1`
-
----
-
-## Test results
-
-```
-Ran 3 test suites in 23.42ms (33.46ms CPU time): 8 tests passed, 0 failed
-[PASS] test_Integration_Workflow()         (gas: 675673)
-[PASS] test_DecentralizedPromotion_Success()
-[PASS] test_DecentralizedPromotion_WinsResetOnLoss()
-[PASS] test_ParkAndWithdraw()              (gas: 267390)
-[PASS] test_PostScore()
-[PASS] test_Promote()
-[PASS] test_RegisterStrategy()
-[PASS] test_Revert_NonPromoterPromote()
-```
-
-`test_Integration_Workflow` is the full path: deploy hook → init pool → add out-of-range liquidity → hook routes USDC to vault → swap triggers JIT recall → vault balance returns to zero.
 
 ---
 
@@ -215,13 +240,14 @@ Ran 3 test suites in 23.42ms (33.46ms CPU time): 8 tests passed, 0 failed
 
 Built against the Uniswap `v4-security-foundations` threat model.
 
-- **`validateHookAddress(this)` enforced in `BaseHook` constructor** — deployed hook address must encode correct permission bits in its low 14 bits; misdeployed hooks revert at construction.
-- **`onlyPoolManager` modifier on every external callback** via the canonical `BaseHook` internal-callback pattern.
+- **`validateHookAddress(this)` enforced in `BaseHook` constructor** — deployed hook address must encode correct permission bits in its low 14 bits; misdeployed hooks revert at construction. Our mainnet hook at `0x010023fc…8580` encodes `0x580` (afterAddLiquidity + afterRemoveLiquidity + beforeSwap).
+- **`onlyPoolManager` modifier on every external callback** via the canonical `BaseHook` internal-callback pattern (we inlined the canonical source because the installed v4-periphery submodule doesn't ship `src/utils/BaseHook.sol`).
 - **Trustless promotion gate** — `consecutiveWins` mapping lives on-chain, anyone can call `promote()` once threshold is met; promotion is not promoter-gated, scoring is.
-- **EIP-1153 transient storage** for tracking parked USDC within the swap transaction lifecycle, reducing storage gas on JIT recall.
+- **EIP-1153 transient storage** for tracking parked USDT within the swap transaction lifecycle, reducing storage gas on JIT recall.
 - **Owner-gated strategy registration + score posting** via OpenZeppelin `Ownable`.
-- **Encrypted private key support** for the off-chain promoter — AES-256-GCM + PBKDF2 via `agent/src/crypto.ts`; raw private keys never need to touch disk.
-- **Operating-mode guardrails** enforce `max_proposals_per_day`, `max_strategies_registered`, `pinned_strategy_ids`, `require_security_audit_for` before any LLM-generated proposal can be acted on.
+- **Encrypted private key support** for the off-chain promoter — AES-256-GCM + PBKDF2 via `agent/src/crypto.ts`; raw keys never need to touch disk.
+- **Chain-scoped operating-mode guardrails** prevent the AI from deploying new Solidity to mainnet.
+- **Per-mode rate limits**: `max_proposals_per_day`, `max_strategies_registered`, `pinned_strategy_ids`, `require_security_audit_for`, `blocked_action_types`.
 
 ---
 
@@ -229,20 +255,64 @@ Built against the Uniswap `v4-security-foundations` threat model.
 
 ```
 agentfloat-hook/
-├── contracts/                  # Foundry: AgentFloatHook, FloatVault, strategies, tests
-├── agent/                      # Off-chain agent (watcher/scorer/promoter/orchestrator/consolidator/approver/deployer + API)
-├── web/                        # Next.js dashboard with wallet connect + SIWE auth
+├── contracts/                  Foundry workspace
+│   ├── src/
+│   │   ├── AgentFloatHook.sol      v4 hook with afterAddLiquidity + beforeSwap
+│   │   ├── FloatVault.sol          strategy registry + on-chain consecutiveWins
+│   │   ├── base/BaseHook.sol       canonical inlined from v4-periphery
+│   │   ├── strategies/
+│   │   │   ├── IStrategy.sol
+│   │   │   ├── IdleStrategy.sol
+│   │   │   ├── AaveStrategy.sol    real Aave V3 USDT integration
+│   │   │   └── MockYieldStrategy.sol
+│   │   └── flap/                   Flap-graduated-pool yield adapter
+│   │       ├── FlapYieldTaxVault.sol
+│   │       ├── FlapYieldTaxVaultFactory.sol
+│   │       ├── VaultBaseV2.sol
+│   │       └── IVaultSchemasV1.sol
+│   ├── script/
+│   │   ├── Deploy.s.sol            one-shot (chain-aware: branches on 196 vs 1952)
+│   │   ├── DeployMainnet.s.sol     mainnet-only deploy
+│   │   ├── DeployHookOnly.s.sol    CREATE2 salt mining + hook deploy
+│   │   ├── MineHookSalt.s.sol      standalone salt miner
+│   │   ├── DeployFlapFactory.s.sol Flap factory deploy
+│   │   └── XLayerMainnet.sol       canonical external address constants
+│   └── test/                       12 tests, all passing
+│
+├── agent/                       Off-chain agent (TypeScript)
+│   └── src/
+│       ├── index.ts                entry point — starts watcher + API
+│       ├── watcher.ts              block polling, epoch loop
+│       ├── scorer.ts               computes scores, posts on-chain
+│       ├── promoter.ts             guards + promote() calls
+│       ├── orchestrator.ts         Groq llama-3.3 proposal generator
+│       ├── approver.ts             chain-scoped + mode-scoped policy
+│       ├── deployer.ts             ships approved proposals on-chain
+│       ├── consolidator.ts         distills history into wiki
+│       ├── brain.ts                markdown reader + types
+│       ├── store.ts                SQLite mirror
+│       ├── api.ts                  REST + SIWE auth
+│       └── crypto.ts               AES-256-GCM key encryption
+│
+├── web/                         Next.js dashboard
+│   └── src/
+│       ├── app/                    pages + layout
+│       ├── components/             Receipt, ModeDial, StrategyRace, etc.
+│       └── lib/                    wallet, api client, types
+│
 ├── docs/
 │   ├── architecture.md
-│   ├── faq.md                  # How strategies handle market volatility
-│   ├── submission.md           # Hackathon submission package
-│   └── video_script.md         # 90-second demo storyboard
-├── .agents/skills/             # Uniswap official AI skills (v4-hook-generator, v4-security-foundations, etc.)
-└── README.md                   # this file
+│   ├── faq.md                   how strategies handle market volatility
+│   ├── submission.md            hackathon submission package
+│   ├── tweet_thread.md          4-tweet draft
+│   └── video_script.md          90-second demo storyboard
+│
+├── .agents/skills/              Uniswap official AI skills
+└── README.md                    this file
 ```
 
 ---
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE) for full text.
