@@ -63,6 +63,41 @@ The contracts execute. The brain is the operating system. The LLM is the planner
 
 ---
 
+## Mainnet readiness
+
+AgentFloat is architected so the AI can run **autonomously on testnet** and **boundedly on mainnet**.
+
+| Network | Chain | AI can | AI cannot |
+|---------|-------|--------|-----------|
+| X Layer Testnet | 1952 | deploy new Solidity strategies, propose param variants, modify scoring | promote shadows to active (only the on-chain `consecutiveWins` counter can) |
+| X Layer Mainnet | 196 | register/retire strategies from a pre-audited library, adjust scoring within bounds | deploy new Solidity contracts to mainnet |
+
+The mainnet allowlist is enforced by `chain_actions_allowed` in `~/brain/wiki/agentfloat-operating-mode.md`. Any new Solidity for mainnet goes through human review + `v4-security-foundations` audit before being added to the library.
+
+**Mainnet canonical addresses (X Layer chain 196):**
+
+| Contract | Address |
+|---------|--------|
+| Uniswap v4 PoolManager | [`0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32`](https://www.oklink.com/xlayer/address/0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32) |
+| Aave V3 Pool | [`0xE3F3Caefdd7180F884c01E57f65Df979Af84f116`](https://www.oklink.com/xlayer/address/0xE3F3Caefdd7180F884c01E57f65Df979Af84f116) |
+| USDT | [`0x779Ded0c9e1022225f8E0630b35a9b54bE713736`](https://www.oklink.com/xlayer/address/0x779Ded0c9e1022225f8E0630b35a9b54bE713736) |
+| aUSDT | [`0xF356ae412dB5df43BD3a10746f7ad4e1C4De4297`](https://www.oklink.com/xlayer/address/0xF356ae412dB5df43BD3a10746f7ad4e1C4De4297) |
+
+To deploy to mainnet:
+
+```bash
+# 1. Mine a hook salt (predicts the hook address — must encode permission bits)
+forge script contracts/script/MineHookSalt.s.sol --rpc-url $X_LAYER_MAINNET_RPC
+
+# 2. Set HOOK_SALT in .env, then run the one-shot deploy
+forge script contracts/script/DeployMainnet.s.sol --rpc-url $X_LAYER_MAINNET_RPC \
+  --broadcast --legacy --priority-gas-price 50000000
+```
+
+Expected cost: ~8M gas at ~0.1 gwei ≈ **0.0008 OKB (~$0.20)**.
+
+---
+
 ## Deployed contracts — X Layer Testnet (chain 1952)
 
 | Contract | Address |
