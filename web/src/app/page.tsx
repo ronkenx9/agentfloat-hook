@@ -10,6 +10,9 @@ import { EditorialImage } from "@/components/EditorialImage";
 import { LiveTicker } from "@/components/LiveTicker";
 import { StrategyRace } from "@/components/StrategyRace";
 import { EventTicker } from "@/components/EventTicker";
+import { HookDiagram } from "@/components/HookDiagram";
+import { HeroMetrics } from "@/components/HeroMetrics";
+import { StrategyDeck } from "@/components/StrategyDeck";
 
 // Re-render every 30 seconds so live proposals/scores show up without manual refresh.
 export const revalidate = 30;
@@ -65,6 +68,15 @@ export default async function Home({
           </div>
         }
       />
+
+      {/* ─────────── Hero metrics row ─────────── */}
+      <HeroMetrics />
+
+      {/* ─────────── Hook in Action diagram ─────────── */}
+      <HookDiagram />
+
+      {/* ─────────── Strategy deck (Pokemon cards) ─────────── */}
+      <StrategyDeck />
 
       {/* ─────────── Strategy race (live bars) ─────────── */}
       <StrategyRace />
