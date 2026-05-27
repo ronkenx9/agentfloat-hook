@@ -168,7 +168,7 @@ function computeStats(entries: ScoreEntry[], specs: StrategySpec[]): StrategySta
     stats.push({
       spec: specsById.get(strategyId),
       strategyId,
-      strategyName: strategyEntries[0].strategyName,
+      strategyName: specsById.get(strategyId)?.name || strategyEntries[strategyEntries.length - 1].strategyName,
       totalObservations: strategyEntries.length,
       firstSeen: strategyEntries[0].timestamp,
       lastSeen: strategyEntries[strategyEntries.length - 1].timestamp,

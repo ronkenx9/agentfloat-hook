@@ -157,13 +157,16 @@ export async function runDeployer(): Promise<number> {
       const specFilename = `mock-yield-strategy-v${strategyId}.md`;
       const specPath = path.join(SPECS_DIR, specFilename);
       const expectedApyBps = Number(bpsPerBlock) / 2; // approximation for expected apy bps based on rate
+      const isMainnet = CONFIG.chainId === 196;
+      const networkName = isMainnet ? 'x-layer-mainnet' : 'x-layer-testnet';
+      const explorerUrl = xLayerTestnetChain.blockExplorers.default.url;
 
       const specContent = `---
 name: agentfloat-strategy-mock-yield-v${strategyId}
 strategy_id: ${strategyId}
 contract_address: "${newStrategyAddress}"
-network: x-layer-testnet
-chain_id: 1952
+network: ${networkName}
+chain_id: ${CONFIG.chainId}
 status: shadow
 is_shadow: true
 expected_apy_bps: ${expectedApyBps}
@@ -179,7 +182,7 @@ Parameter variant deployed autonomously by the AgentFloat deploy loop.
 ## Parameters
 - **bpsPerBlock**: ${bpsPerBlock} (contract scale)
 - **Source Proposal**: [${filename}](./proposals/${filename})
-- **Tx Hash**: [${deployHash}](https://www.oklink.com/xlayer-test/tx/${deployHash})
+- **Tx Hash**: [${deployHash}](${explorerUrl}/tx/${deployHash})
 `;
       fs.writeFileSync(specPath, specContent);
       console.log(`[Deployer] Wrote strategy spec to ${specPath}`);
@@ -203,9 +206,9 @@ Parameter variant deployed autonomously by the AgentFloat deploy loop.
 - **Type:** parameter_variant
 - **Strategy ID:** ${strategyId}
 - **Strategy Name:** Mock Yield Strategy (v${strategyId})
-- **Deployed Address:** [${newStrategyAddress}](https://www.oklink.com/xlayer-test/address/${newStrategyAddress})
+- **Deployed Address:** [${newStrategyAddress}](${explorerUrl}/address/${newStrategyAddress})
 - **Constructor Arg (bpsPerBlock):** ${bpsPerBlock}
-- **Tx:** [${deployHash}](https://www.oklink.com/xlayer-test/tx/${deployHash})
+- **Tx:** [${deployHash}](${explorerUrl}/tx/${deployHash})
 - **Time:** ${new Date().toISOString()}
 `;
       fs.appendFileSync(journalPath, journalEntry);

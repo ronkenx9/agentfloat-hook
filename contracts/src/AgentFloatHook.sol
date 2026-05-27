@@ -27,6 +27,9 @@ contract AgentFloatHook is BaseHook {
     FloatVault public immutable vault;
     IERC20 public immutable usdc;
 
+    // Track user deposits to prevent capital lockup
+    mapping(address => uint256) public userDeposits;
+
     // EIP-1153 Transient storage slot for tracking transiently parked USDC within the transaction lifecycle
     bytes32 private constant TRANSIENT_PARKED_USDC_SLOT = keccak256("agentfloat.transient.parked.usdc");
 
@@ -72,17 +75,23 @@ contract AgentFloatHook is BaseHook {
 
         // If current tick is out of LP range, capital is idle
         if (currentTick < params.tickLower || currentTick > params.tickUpper) {
+            address lpProvider = sender;
             uint256 idleAmount = 100 * 10 ** 6; // default mock amount
-            if (hookData.length >= 32) {
+            if (hookData.length >= 64) {
+                (lpProvider, idleAmount) = abi.decode(hookData, (address, uint256));
+            } else if (hookData.length >= 32) {
                 idleAmount = abi.decode(hookData, (uint256));
             }
 
-            emit IdleLPParked(sender, key.toId(), idleAmount, currentTick);
+            emit IdleLPParked(lpProvider, key.toId(), idleAmount, currentTick);
 
-            if (usdc.allowance(sender, address(this)) >= idleAmount) {
-                usdc.safeTransferFrom(sender, address(this), idleAmount);
+            if (usdc.allowance(lpProvider, address(this)) >= idleAmount) {
+                usdc.safeTransferFrom(lpProvider, address(this), idleAmount);
                 usdc.approve(address(vault), idleAmount);
                 vault.park(idleAmount);
+
+                // Track deposit
+                userDeposits[lpProvider] += idleAmount;
 
                 // Gas Optimization: Track the parked amount in transient storage
                 bytes32 slot = TRANSIENT_PARKED_USDC_SLOT;
@@ -97,13 +106,26 @@ contract AgentFloatHook is BaseHook {
     }
 
     function _afterRemoveLiquidity(
-        address,
+        address sender,
         PoolKey calldata,
         ModifyLiquidityParams calldata,
         BalanceDelta delta,
         BalanceDelta,
         bytes calldata
     ) internal override returns (bytes4, BalanceDelta) {
+        uint256 userDep = userDeposits[sender];
+        if (userDep > 0) {
+            userDeposits[sender] = 0;
+            
+            // Check if the funds are in the vault or already recalled to the hook balance
+            uint256 vaultBal = vault.deposits(address(this));
+            if (vaultBal >= userDep) {
+                vault.withdraw(userDep);
+            }
+            
+            // Return USDC back to the LP provider (sender)
+            usdc.safeTransfer(sender, userDep);
+        }
         return (BaseHook.afterRemoveLiquidity.selector, delta);
     }
 

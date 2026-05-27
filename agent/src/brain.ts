@@ -88,8 +88,8 @@ export function loadStrategySpecs(): StrategySpec[] {
       const parsed = matter(raw);
       const data = parsed.data;
 
-      // Skip retired strategies
-      if (data.status === 'retired') continue;
+      // Do not skip retired strategies, so they are kept in sync in the SQLite DB
+      // and displayed correctly on the dashboard.
 
       // Validate required fields
       if (typeof data.strategy_id !== 'number' || !data.contract_address) {
@@ -167,6 +167,15 @@ export interface OperatingMode {
   blocked_action_types: string[];
   require_security_audit_for: string[];
   veto_window_hours: Record<string, number>;
+  /**
+   * Chain-scoped allowlist. The agent reads `process.env.X_LAYER_CHAIN_ID` and
+   * applies the matching entry. Action types not listed are blocked on that chain.
+   *
+   * The intent: on mainnet, the AI can register/un-register strategies from a
+   * pre-audited library, but cannot deploy new Solidity. New strategy contracts
+   * require human signoff + audit before being added to the library.
+   */
+  chain_actions_allowed: Record<string, string[]>;
   sourceFile: string;
 }
 
@@ -181,6 +190,13 @@ const DEFAULT_MODE: Omit<OperatingMode, 'sourceFile'> = {
   blocked_action_types: [],
   require_security_audit_for: ['new_strategy'],
   veto_window_hours: {},
+  // chain "0" or absent = no chain-scoped restriction (testnet default permissive)
+  chain_actions_allowed: {
+    // X Layer mainnet (chain 196) — only safe actions on real money
+    '196': ['register_strategy', 'retire', 'scoring_change', 'no_action'],
+    // X Layer testnet (chain 1952) — everything goes for experimentation
+    '1952': ['parameter_variant', 'new_strategy', 'scoring_change', 'retire', 'no_action', 'register_strategy'],
+  },
 };
 
 /**

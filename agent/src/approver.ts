@@ -77,6 +77,16 @@ function decide(rec: ProposalRecord, mode: OperatingMode, ctx: { todayCount: num
 
   // ── Hard guardrails (apply in every mode except `watch`) ─────────────
   if (mode.mode !== 'watch') {
+    // Chain-scoped allowlist — mainnet bounds the AI to register-from-library actions
+    const chainId = process.env.X_LAYER_CHAIN_ID || '0';
+    const allowedForChain = mode.chain_actions_allowed?.[chainId];
+    if (allowedForChain && allowedForChain.length > 0 && !allowedForChain.includes(action)) {
+      return {
+        newStatus: 'rejected_by_rule',
+        reason: `action_type "${action}" not in chain_actions_allowed for chain ${chainId} (mainnet bounds AI to library register/retire/scoring)`,
+      };
+    }
+
     if (mode.blocked_action_types.includes(action)) {
       return { newStatus: 'rejected_by_rule', reason: `action_type "${action}" is in blocked_action_types` };
     }

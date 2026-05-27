@@ -6,6 +6,7 @@ import "../src/FloatVault.sol";
 import "../src/AgentFloatHook.sol";
 import "../src/strategies/IdleStrategy.sol";
 import "../src/strategies/MockYieldStrategy.sol";
+import "../src/strategies/AaveStrategy.sol";
 import "../test/mocks/MockUSDC.sol";
 import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
 import {PoolManager} from "v4-core/src/PoolManager.sol";
@@ -45,17 +46,35 @@ contract DeployScript is Script {
         IdleStrategy idle = new IdleStrategy(usdcAddr);
         console.log("Deployed IdleStrategy at:", address(idle));
 
-        MockYieldStrategy yieldStrat = new MockYieldStrategy(usdcAddr, address(vault), 1000); // 10 bps per block
-        console.log("Deployed MockYieldStrategy at:", address(yieldStrat));
-
         // 5. Register strategies in FloatVault
         vault.registerStrategy(address(idle), false);      // active (id = 1)
-        vault.registerStrategy(address(yieldStrat), true);  // shadow (id = 2)
+
+        if (block.chainid == 196) {
+            // Deploy AaveStrategy
+            // Aave Pool on X Layer: 0xE3F3Caefdd7180F884c01E57f65Df979Af84f116
+            // aUSDT0 token on X Layer: 0xF356ae412dB5df43BD3a10746f7ad4e1C4De4297
+            AaveStrategy aaveStrat = new AaveStrategy(
+                usdcAddr, 
+                0xE3F3Caefdd7180F884c01E57f65Df979Af84f116, 
+                0xF356ae412dB5df43BD3a10746f7ad4e1C4De4297
+            );
+            console.log("Deployed AaveStrategy at:", address(aaveStrat));
+            vault.registerStrategy(address(aaveStrat), true); // shadow (id = 2)
+
+            // Deploy MockYieldStrategy as secondary shadow
+            MockYieldStrategy mockStrat = new MockYieldStrategy(usdcAddr, address(vault), 200); // 2 bps per block
+            console.log("Deployed MockYieldStrategy at:", address(mockStrat));
+            vault.registerStrategy(address(mockStrat), true); // shadow (id = 3)
+        } else {
+            MockYieldStrategy yieldStrat = new MockYieldStrategy(usdcAddr, address(vault), 1000); // 10 bps per block
+            console.log("Deployed MockYieldStrategy at:", address(yieldStrat));
+            vault.registerStrategy(address(yieldStrat), true);  // shadow (id = 2)
+        }
         console.log("Registered strategies in FloatVault");
 
         // 6. Mine hook salt & deploy AgentFloatHook
         bytes32 salt = mineHookSalt(
-            deployer,
+            0x4e59b44847b379578588920cA78FbF26c0B4956C,
             poolManagerAddr,
             address(vault)
         );

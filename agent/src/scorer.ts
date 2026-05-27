@@ -16,10 +16,11 @@ export interface StrategyResult {
   score: bigint;
 }
 
-// Custom X Layer testnet chain definition
+// Custom X Layer chain definition (dynamically configured via env)
+const isMainnet = CONFIG.chainId === 196;
 export const xLayerTestnetChain = {
-  id: 1952,
-  name: 'X Layer Testnet',
+  id: CONFIG.chainId,
+  name: isMainnet ? 'X Layer Mainnet' : 'X Layer Testnet',
   nativeCurrency: {
     decimals: 18,
     name: 'OKB',
@@ -30,7 +31,10 @@ export const xLayerTestnetChain = {
     public: { http: [CONFIG.rpcUrl] },
   },
   blockExplorers: {
-    default: { name: 'OKLink', url: 'https://www.oklink.com/xlayer-test' },
+    default: { 
+      name: 'OKLink', 
+      url: isMainnet ? 'https://www.oklink.com/xlayer' : 'https://www.oklink.com/xlayer-test' 
+    },
   },
 };
 
