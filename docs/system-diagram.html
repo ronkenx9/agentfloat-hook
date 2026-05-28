@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentFloat — System Diagram</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E3D3BF; --paper2:#EDE3CC; --ink:#181614; --soft:#5A554D; --faint:#8A8378;
+    --rule:#C9C0B0; --gold:#C39C4E; --red:#B53A2A; --green:#4F6B3C;
+    --testnet:#6E5A8A; --mainnet:#2E5E4E;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:'Source Serif 4',Georgia,serif;padding:32px 28px 64px;-webkit-font-smoothing:antialiased}
+  .mono{font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+  .mast{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--rule);padding-bottom:12px;margin-bottom:24px;font-size:11px;text-transform:uppercase;color:var(--soft)}
+  h1{font-size:34px;font-weight:400;letter-spacing:-.02em;margin-bottom:4px}
+  .sub{color:var(--soft);font-size:14px;margin-bottom:28px;max-width:70ch}
+  .wrap{max-width:1240px;margin:0 auto}
+
+  /* shared top band */
+  .band{border:1px solid var(--ink);border-radius:6px;background:var(--paper2);padding:16px 20px;margin-bottom:8px}
+  .band .label{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--soft);margin-bottom:8px}
+  .band h2{font-size:18px;font-weight:600;margin-bottom:6px}
+  .pipe{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink);background:rgba(0,0,0,.04);padding:8px 12px;border-radius:4px;overflow-x:auto;white-space:nowrap}
+  .pipe b{color:var(--gold)}
+
+  .connector{text-align:center;color:var(--soft);font-family:'JetBrains Mono',monospace;font-size:11px;padding:10px 0 6px}
+
+  /* two-chain grid */
+  .chains{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:880px){.chains{grid-template-columns:1fr}}
+
+  .chain{border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--paper2)}
+  .chain-head{padding:12px 18px;color:var(--paper);display:flex;justify-content:space-between;align-items:baseline}
+  .chain-head .t{font-size:16px;font-weight:600}
+  .chain-head .meta{font-family:'JetBrains Mono',monospace;font-size:10px;opacity:.85}
+  .chain-head.testnet{background:var(--testnet)}
+  .chain-head.mainnet{background:var(--mainnet)}
+  .chain-body{padding:18px}
+
+  .autonomy{font-size:11px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em;padding:6px 10px;border-radius:4px;display:inline-block;margin-bottom:14px}
+  .autonomy.full{background:rgba(110,90,138,.14);color:var(--testnet)}
+  .autonomy.bounded{background:rgba(46,94,78,.14);color:var(--mainnet)}
+
+  .node{border:1px solid var(--rule);border-radius:4px;background:var(--paper);padding:10px 12px;margin-bottom:8px}
+  .node .n{font-size:14px;font-weight:600}
+  .node .a{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint)}
+  .node .d{font-size:11px;color:var(--soft);margin-top:2px}
+  .arrow{text-align:center;color:var(--faint);font-size:14px;line-height:1;padding:2px 0}
+
+  .strat{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:6px 10px;border-left:2px solid var(--rule);margin:4px 0 4px 12px;font-size:12px}
+  .strat.active{border-left-color:var(--green);background:rgba(79,107,60,.08)}
+  .strat.shadow{border-left-color:var(--faint)}
+  .strat.retired{border-left-color:var(--rule);opacity:.5;text-decoration:line-through}
+  .strat.aideployed{border-left-color:var(--gold);background:rgba(195,156,78,.1)}
+  .pill{font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;padding:1px 6px;border-radius:3px}
+  .pill.active{background:var(--green);color:var(--paper)}
+  .pill.shadow{background:var(--rule);color:var(--ink)}
+  .pill.retired{background:var(--faint);color:var(--paper)}
+  .pill.ai{background:var(--gold);color:var(--ink)}
+
+  .yield{border:1px solid var(--green);border-radius:4px;background:rgba(79,107,60,.1);padding:10px 12px;margin-top:8px}
+  .yield .n{font-size:13px;font-weight:600;color:var(--green)}
+  .yield .d{font-size:11px;color:var(--soft);margin-top:2px}
+
+  /* flap band */
+  .flap{border:1px dashed var(--gold);border-radius:6px;background:rgba(195,156,78,.07);padding:16px 20px;margin-top:18px}
+  .flap .label{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--gold);margin-bottom:8px;font-family:'JetBrains Mono',monospace}
+  .flap-flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px}
+  .flap-box{border:1px solid var(--rule);border-radius:4px;background:var(--paper);padding:8px 12px}
+  .flap-box .n{font-size:13px;font-weight:600}
+  .flap-box .d{font-size:10px;color:var(--soft)}
+  .flap-arrow{color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:11px}
+
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:28px;padding-top:16px;border-top:1px solid var(--rule);font-size:11px;color:var(--soft)}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .sw{width:12px;height:12px;border-radius:2px;display:inline-block}
+  footer{margin-top:32px;padding-top:14px;border-top:1px solid var(--rule);font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);display:flex;justify-content:space-between}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="mast"><span class="mono">AgentFloat · System Diagram</span><span class="mono">X Layer · MMXXVI</span></div>
+  <h1>How AgentFloat works</h1>
+  <p class="sub">One brain + one agent drive two chains. Testnet is where the AI experiments freely. Mainnet is bounded to a pre-audited library and currently earning real Aave V3 yield. Flap-graduated tokens plug in as depositors.</p>
+
+  <!-- SHARED BRAIN -->
+  <div class="band">
+    <div class="label">Policy layer · shared across both chains</div>
+    <h2>The Brain — <span class="mono" style="font-size:13px;font-weight:400">~/brain/ (markdown)</span></h2>
+    <div class="pipe">strategy specs · scoring rules · <b>operating-mode + chain_actions_allowed</b> · LLM proposals · history wiki</div>
+  </div>
+
+  <div class="connector">▲ reads every epoch&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;writes scores / proposals / promotions ▼</div>
+
+  <!-- SHARED AGENT -->
+  <div class="band">
+    <div class="label">Execution layer · one Node process</div>
+    <h2>Off-chain Agent</h2>
+    <div class="pipe">watcher → scorer → promoter → <b>orchestrator (Groq llama-3.3)</b> → approver → deployer → consolidator → REST API :4000</div>
+  </div>
+
+  <div class="connector">│ routes actions by chain — full autonomy on 1952, bounded on 196 │</div>
+
+  <!-- TWO CHAINS -->
+  <div class="chains">
+
+    <!-- TESTNET -->
+    <div class="chain">
+      <div class="chain-head testnet"><span class="t">Testnet</span><span class="meta">chain 1952 · own PoolManager · MockUSDC</span></div>
+      <div class="chain-body">
+        <span class="autonomy full">Full autonomy — AI may deploy new Solidity</span>
+        <div class="node"><span class="n">LP adds out-of-range liquidity</span></div>
+        <div class="arrow">↓</div>
+        <div class="node"><span class="n">AgentFloatHook</span> <span class="a">0x3A00…3b5F</span><div class="d">afterAddLiquidity → park · beforeSwap → JIT recall</div></div>
+        <div class="arrow">↓ park idle MockUSDC</div>
+        <div class="node">
+          <span class="n">FloatVault</span> <span class="a">0x4d33…7c5f</span>
+          <div class="strat shadow"><span>#1 Idle</span><span class="pill shadow">shadow</span></div>
+          <div class="strat active"><span>#2 Mock Yield</span><span class="pill active">active ← auto-promoted</span></div>
+          <div class="strat aideployed"><span>#3 Mock Yield v3</span><span class="pill ai">AI-deployed</span></div>
+        </div>
+        <div class="yield"><span class="n">Proof: autonomous loop closed</span><div class="d">Strategy #3 was proposed by Groq, cleared by guardrails, and deployed on-chain with no human. Strategy #2 auto-promoted shadow→active via on-chain consecutiveWins.</div></div>
+      </div>
+    </div>
+
+    <!-- MAINNET -->
+    <div class="chain">
+      <div class="chain-head mainnet"><span class="t">Mainnet ⚡</span><span class="meta">chain 196 · canonical Uniswap v4 PM · real USDT</span></div>
+      <div class="chain-body">
+        <span class="autonomy bounded">Bounded — register / retire / scoring only</span>
+        <div class="node"><span class="n">LP adds out-of-range liquidity</span></div>
+        <div class="arrow">↓</div>
+        <div class="node"><span class="n">AgentFloatHook</span> <span class="a">0x5Ba6…4580</span><div class="d">perm bits 0x580 verified · attaches to canonical v4 PoolManager</div></div>
+        <div class="arrow">↓ park idle USDT</div>
+        <div class="node">
+          <span class="n">FloatVault</span> <span class="a">0xbF06…a6f4</span>
+          <div class="strat shadow"><span>#1 Idle</span><span class="pill shadow">shadow</span></div>
+          <div class="strat active"><span>#2 AaveStrategy</span><span class="pill active">active</span></div>
+        </div>
+        <div class="arrow">↓ supplies</div>
+        <div class="node"><span class="n">Aave V3 Pool</span> <span class="a">0xE3F3…F116</span></div>
+        <div class="yield"><span class="n">LIVE YIELD — 4 aUSDT held</span><div class="d">AaveStrategy 0x4C10…6E1 holds an interest-bearing Aave position that grows every block. Real money, real protocol, on mainnet.</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FLAP -->
+  <div class="flap">
+    <div class="label">Composability · downstream consumer (mainnet)</div>
+    <div class="flap-flow">
+      <div class="flap-box"><div class="n">Flap-graduated token</div><div class="d">earns tax revenue (OKB / ERC20)</div></div>
+      <span class="flap-arrow">— tax →</span>
+      <div class="flap-box"><div class="n">FlapYieldTaxVault</div><div class="d">one per token · deployed by Factory</div></div>
+      <span class="flap-arrow">— park() →</span>
+      <div class="flap-box"><div class="n">FloatVault (mainnet)</div><div class="d">→ AaveStrategy → Aave V3</div></div>
+      <span class="flap-arrow">→ yield</span>
+    </div>
+    <p style="font-size:11px;color:var(--soft);margin-top:10px">A token launcher calls <span class="mono">FlapYieldTaxVaultFactory.newVault(...)</span> once. Their idle tax revenue then earns Aave yield through the same AI-managed vault — they never design their own optimizer.</p>
+  </div>
+
+  <div class="legend">
+    <span><span class="sw" style="background:var(--testnet)"></span> Testnet — AI sandbox (deploys new code)</span>
+    <span><span class="sw" style="background:var(--mainnet)"></span> Mainnet — bounded, earning live yield</span>
+    <span><span class="sw" style="background:var(--green)"></span> Active strategy (real capital)</span>
+    <span><span class="sw" style="background:var(--gold)"></span> AI-deployed / Flap inflow</span>
+    <span><span class="sw" style="background:var(--faint)"></span> Shadow (simulated, no capital)</span>
+  </div>
+
+  <footer><span>AgentFloat · Hook the Future</span><span>The brain decides · the chain executes · the AI proposes</span></footer>
+
+</div>
+</body>
+</html>

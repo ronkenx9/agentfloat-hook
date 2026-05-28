@@ -2,71 +2,41 @@
 
 **Account:** @AgentFloatXYZ (or your project handle)
 **Tag in every tweet:** @XLayerOfficial · @Uniswap · @flapdotsh
-**Schedule:** post 1/4 on submission day, then 2/4 within 1h, 3/4 by end of day, 4/4 next morning.
 
 ---
 
-## 1/4 — The pitch
+## 1/4 — The Hook
+Concentrated liquidity LPs: what happens to your capital when price moves out of range? It sits idle.
 
-Most DeFi yield routes capital.
+AgentFloat is a Uniswap v4 Hook that sweeps out-of-range capital to earn Aave V3 yield, then recalls it instantly (JIT) the moment a swap occurs.
 
-AgentFloat's learns where to route.
-
-A Uniswap v4 hook on @XLayerOfficial that turns out-of-range LP capital into a self-improving yield system. Submitting to @Uniswap × @flapdotsh × @XLayerOfficial Hook the Future.
+Submitting to the @Uniswap × @flapdotsh × @XLayerOfficial Hook the Future hackathon.
 
 🧵
 
 ---
 
-## 2/4 — How it works
+## 2/4 — How it Improves
+Instead of a static routing path, AgentFloat tests alternative yield strategies in shadow mode.
 
-Three things run in parallel:
+An off-chain AI proposes strategy tweaks based on historical performance, but they only touch capital if they pass performance checks on-chain.
 
-1. The hook routes out-of-range LP USDC into a vault
-2. The vault tests multiple yield strategies side-by-side, only one earning real money
-3. Every hour, an LLM reads the system's own performance and proposes a new strategy
-
-The deterministic promoter ships only proven winners.
-
-[Insert architecture diagram image]
+The AI thinks; the chain decides.
 
 ---
 
-## 3/4 — The proof
+## 3/4 — Flap Token Integration
+We also deployed the FlapYieldTaxVaultFactory on X Layer Mainnet.
 
-Yesterday the AI proposed a parameter variant. Today it's a live contract on X Layer Testnet, deployed with no human in the loop.
-
-Proposal → Approver guardrails → on-chain deployment, all autonomous:
-https://www.oklink.com/xlayer-test/tx/0x4245ab63dbd189b42bd0ba3882458ca924a777828fb60fe69b0ffa75eb5ff54e
-
-Deployed strategy:
-https://www.oklink.com/xlayer-test/address/0xb74204048456a5b51f7f8b57ac3f1ec7ffac63bd
-
-[Screenshot of the proposal markdown + the OKLink tx page]
+Flap launchpad creators can now auto-route token transaction taxes straight into FloatVault, putting idle taxes to work earning yield while waiting for team withdrawals.
 
 ---
 
-## 4/4 — What it means for v4
+## 4/4 — Live on Mainnet
+All contracts are verified and live on X Layer Mainnet:
 
-Hooks are the v4 wedge.
+Hook: 0x5Ba6671e8219C34edA373BF95895306929174580
+Vault: 0xbF06de108735332D1EDb81C7A77A750DD428a6f4
+Flap Factory: 0x87D665B83557365ADf320a439B8a2DFD03c024F8
 
-This one says: liquidity that goes out of range doesn't have to sit there idle. It can earn yield through a strategy that's already been beaten by something better in shadow simulation.
-
-Built with @XLayerOfficial · @Uniswap v4 · @flapdotsh
 Code: github.com/ronkenx9/agentfloat-hook
-
----
-
-## Notes on voice
-
-- No emojis except the single 🧵 in tweet 1
-- No "Introducing" / "Excited to announce" / "🚀"
-- Lead with the unusual claim ("yield that learns where to route"), back it with the deployed contract
-- Tweet 3 is the killer — it's verifiable on-chain. Judges and any technical reader can click through and confirm.
-
-## Image suggestions
-
-- Tweet 1: the architecture diagram (clean SVG of hook → vault → strategies)
-- Tweet 2: the strategy race screenshot from the dashboard (active vs shadow bars)
-- Tweet 3: a screenshot of the proposal markdown next to the OKLink tx confirmation page
-- Tweet 4: AgentFloat brand mark on cream

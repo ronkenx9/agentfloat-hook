@@ -1,14 +1,30 @@
 # AgentFloat
 
-> Yield routing that **learns and ships its own upgrades**. A Uniswap v4 hook on X Layer where out-of-range LP capital flows into a vault that runs multiple yield strategies in parallel. An LLM proposes new ones every hour; only proven winners ship. **Live on X Layer mainnet** with real Aave V3 integration + a Flap-graduated-pool yield adapter.
+> **A Uniswap v4 hook that keeps pool capital productive.** When liquidity isn't needed, the hook routes idle capital into yield. When a swap needs it, the hook recalls it just in time. In the background, an AI tests better yield strategies — but only strategies that win on-chain performance checks can ever touch real capital.
 
-Built for the **Hook the Future** hackathon (OKX × Uniswap × Flap), May 22–28, 2026.
+**Live on X Layer mainnet**, earning real Aave V3 yield. Built for the **Hook the Future** hackathon (OKX × Uniswap × Flap), May 22–28, 2026.
+
+---
+
+## What happens when you swap
+
+```
+1. LP adds liquidity to a v4 pool with AgentFloatHook attached
+2. Price moves out of the LP's range → that capital is now idle
+3. afterAddLiquidity → the hook parks the idle USDT into the vault → vault supplies it to Aave V3 (earning yield)
+4. A swap comes in → beforeSwap → the hook recalls capital just-in-time so the pool can settle
+5. In the background: an AI scores yield strategies and proposes better ones; an on-chain
+   consecutiveWins counter promotes a winner only after it proves itself — no AI can move
+   real capital on its own
+```
+
+The hook is the product. The AI is the optimization layer. The chain is the final authority on what touches money.
 
 ---
 
 ## TL;DR — what makes this submission different
 
-1. **A Uniswap v4 hook deployed live on X Layer mainnet** (chain 196), real Aave V3 USDT, attached to the canonical PoolManager. Hook address: [`0x010023fc…8580`](https://www.oklink.com/xlayer/address/0x010023fcb7Cc4a6f4f867D3AF0C428d80d2B8580) with permission bits `0x580` verified.
+1. **A Uniswap v4 hook deployed live on X Layer mainnet** (chain 196), real Aave V3 USDT, attached to the canonical PoolManager. Hook address: [`0x5Ba6671e8219C34edA373BF95895306929174580`](https://www.oklink.com/xlayer/address/0x5Ba6671e8219C34edA373BF95895306929174580) with permission bits `0x580` verified.
 2. **An AI orchestrator (Groq llama-3.3-70b)** that reads the system's own performance every hour from a markdown second-brain and writes structured strategy proposals.
 3. **An autonomous deploy proof on testnet**: the AI proposed a parameter variant, the operating-mode guardrails cleared it, and the deployer module shipped a real on-chain contract at [`0xb742…ac63bd`](https://www.oklink.com/xlayer-test/address/0xb74204048456a5b51f7f8b57ac3f1ec7ffac63bd) with no human in the loop.
 4. **Trustless on-chain promotion**: `consecutiveWins[strategyId]` lives on the vault. When a shadow strategy outperforms the active one for N epochs, anyone can call `promote()` — no gatekeeper.
@@ -23,21 +39,24 @@ Built for the **Hook the Future** hackathon (OKX × Uniswap × Flap), May 22–2
 
 | Contract | Address | Bytecode |
 |----------|---------|---------|
-| **AgentFloatHook** | [`0x010023fcb7Cc4a6f4f867D3AF0C428d80d2B8580`](https://www.oklink.com/xlayer/address/0x010023fcb7Cc4a6f4f867D3AF0C428d80d2B8580) | 5,101 b · permission bits `0x580` |
-| **FloatVault** | [`0x42Ff0c72A17d5b13bf01a20B194b0D1fe43e50BF`](https://www.oklink.com/xlayer/address/0x42Ff0c72A17d5b13bf01a20B194b0D1fe43e50BF) | 5,115 b |
-| **AaveStrategy** (real Aave V3 USDT) | [`0x1f34e7b58A81a84Def4fdE0ED23daE4B60c500cf`](https://www.oklink.com/xlayer/address/0x1f34e7b58A81a84Def4fdE0ED23daE4B60c500cf) | 2,429 b |
-| **IdleStrategy** (baseline) | [`0xBC049aAD700ee69a72bedF7AE7032e462450Fb5d`](https://www.oklink.com/xlayer/address/0xBC049aAD700ee69a72bedF7AE7032e462450Fb5d) | 939 b |
+| **AgentFloatHook** | [`0x5Ba6671e8219C34edA373BF95895306929174580`](https://www.oklink.com/xlayer/address/0x5Ba6671e8219C34edA373BF95895306929174580) | 5,101 b · permission bits `0x580` |
+| **FloatVault** | [`0xbF06de108735332D1EDb81C7A77A750DD428a6f4`](https://www.oklink.com/xlayer/address/0xbF06de108735332D1EDb81C7A77A750DD428a6f4) | 5,115 b |
+| **FlapYieldTaxVaultFactory** | [`0x87D665B83557365ADf320a439B8a2DFD03c024F8`](https://www.oklink.com/xlayer/address/0x87D665B83557365ADf320a439B8a2DFD03c024F8) | 10,050 b |
+| **AaveStrategy** (real Aave V3 USDT) | [`0x4C109f12d2FA55037439b73CE4E9Ee2C1e1656E1`](https://www.oklink.com/xlayer/address/0x4C109f12d2FA55037439b73CE4E9Ee2C1e1656E1) | 2,429 b |
+| **IdleStrategy** (baseline) | [`0xf292e500459393F5CfaF8fbccFe1426bC3495EEb`](https://www.oklink.com/xlayer/address/0xf292e500459393F5CfaF8fbccFe1426bC3495EEb) | 939 b |
 
 Attached to canonical X Layer mainnet infrastructure (no PoolManager or Aave redeploy needed):
 
 | External contract | Address |
 |---|---|
-| Uniswap v4 PoolManager | [`0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32`](https://www.oklink.com/xlayer/address/0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32) |
+| Uniswap v4 PoolManager | [`0x360e68faccca8ca495c1b759fd9eee466db9fb32`](https://www.oklink.com/xlayer/address/0x360e68faccca8ca495c1b759fd9eee466db9fb32) |
 | Aave V3 Pool | [`0xE3F3Caefdd7180F884c01E57f65Df979Af84f116`](https://www.oklink.com/xlayer/address/0xE3F3Caefdd7180F884c01E57f65Df979Af84f116) |
-| USDT (USD₮0) | [`0x779Ded0c9e1022225f8E0630b35a9b54bE713736`](https://www.oklink.com/xlayer/address/0x779Ded0c9e1022225f8E0630b35a9b54bE713736) |
+| USDT / USDC | [`0x779Ded0c9e1022225f8E0630b35a9b54bE713736`](https://www.oklink.com/xlayer/address/0x779Ded0c9e1022225f8E0630b35a9b54bE713736) |
 | aUSDT | [`0xF356ae412dB5df43BD3a10746f7ad4e1C4De4297`](https://www.oklink.com/xlayer/address/0xF356ae412dB5df43BD3a10746f7ad4e1C4De4297) |
 
 Total deploy cost: **0.000372 OKB (~$0.09)** at 0.02 gwei.
+
+**Live yield, verifiable now:** the AaveStrategy `0x4C109…` holds a real interest-bearing **aUSDT** position supplied to Aave V3 — capital that flowed through the vault and is earning lending yield block-by-block. Check `aUSDT.balanceOf(0x4C109f12d2FA55037439b73CE4E9Ee2C1e1656E1)` on chain 196.
 
 ---
 
@@ -240,7 +259,7 @@ Demo mode (no agent needed): `http://localhost:3000/?demo=1`
 
 Built against the Uniswap `v4-security-foundations` threat model.
 
-- **`validateHookAddress(this)` enforced in `BaseHook` constructor** — deployed hook address must encode correct permission bits in its low 14 bits; misdeployed hooks revert at construction. Our mainnet hook at `0x010023fc…8580` encodes `0x580` (afterAddLiquidity + afterRemoveLiquidity + beforeSwap).
+- **`validateHookAddress(this)` enforced in `BaseHook` constructor** — deployed hook address must encode correct permission bits in its low 14 bits; misdeployed hooks revert at construction. Our mainnet hook at `0x5Ba6671e8219C34edA373BF95895306929174580` encodes `0x580` (afterAddLiquidity + afterRemoveLiquidity + beforeSwap).
 - **`onlyPoolManager` modifier on every external callback** via the canonical `BaseHook` internal-callback pattern (we inlined the canonical source because the installed v4-periphery submodule doesn't ship `src/utils/BaseHook.sol`).
 - **Trustless promotion gate** — `consecutiveWins` mapping lives on-chain, anyone can call `promote()` once threshold is met; promotion is not promoter-gated, scoring is.
 - **EIP-1153 transient storage** for tracking parked USDT within the swap transaction lifecycle, reducing storage gas on JIT recall.

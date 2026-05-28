@@ -1,80 +1,53 @@
 # AgentFloat — 90-Second Demo Script
 
 **Target length:** 75–90 seconds
-**Aspect ratio:** 16:9, 1920×1080 (X auto-crops to 16:9 for landscape video)
-**Audio:** voiceover only, no music, light background room tone OK
-**Tone:** measured, calm, fact-led. Not hype.
-**Voice direction:** read the lines exactly as written — don't ad-lib. Each line is a beat.
+**Aspect ratio:** 16:9, 1920×1080
+**Audio:** Voiceover only (measured, calm, fact-led)
 
 ---
 
-## Shot 1 (0:00–0:08) — The problem
+## Shot 1 (0:00–0:15) — The Hook & JIT Recall
 
-**On screen:** Uniswap v4 pool interface (screenshot or screen recording). Cursor hovers over a concentrated liquidity position. Highlight the words "out of range" in red.
+**On screen:** Uniswap v4 pool interface. Zoom in on an "out of range" concentrated liquidity position. Transition to a clean animation of the Hook routing out-of-range capital to Aave V3, then instantly returning it on a swap.
 
 **Voiceover:**
-> "Concentrated liquidity is the v4 thesis. But when price moves out of your range, your capital sits idle."
+> "Concentrated liquidity is highly efficient, but when price moves out of range, LP capital sits idle. AgentFloat is a Uniswap v4 Hook that solves this. It sweeps out-of-range capital to earn Aave V3 yield, and recalls it inside the swap path before execution. LP capital earns while it waits, and the pool stays ready for real swap demand."
 
 ---
 
-## Shot 2 (0:08–0:18) — The hook fires
+## Shot 2 (0:15–0:30) — Flap Ecosystem Integration
 
-**On screen:** Architecture diagram of AgentFloat appears. Animate the arrow from "Uniswap v4 Pool" → "AgentFloatHook" → "FloatVault." Use the diagram from the README ASCII or build a clean SVG.
+**On screen:** Cut to the Flap tax vault interface. Show the custom tax vault deploying via `FlapYieldTaxVaultFactory` on X Layer Mainnet, routing USDT0 taxes directly to the `FloatVault`.
 
 **Voiceover:**
-> "AgentFloat is a v4 hook. When your position goes out of range, it routes the idle USDC into a vault that earns yield. When price moves back, the hook recalls the capital in time for the swap."
+> "We also integrated with the Flap token launchpad. Instead of token transaction taxes sitting idle in creator contracts, our custom Flap Yield Tax Vault sweeps quote tokens directly to the yield vault, putting idle ecosystem capital to work."
 
 ---
 
-## Shot 3 (0:18–0:35) — Multiple strategies in parallel
+## Shot 3 (0:30–0:50) — The AI Strategy Loop
 
-**On screen:** Cut to the dashboard. Show the **Strategy Race** section with the bars filling. Active strategy in gold, shadows below.
+**On screen:** Cut to the dashboard's "Strategy Race" showing the active Aave strategy in gold, and shadow strategies below it. Open the proposals feed showing recent strategy proposals.
 
 **Voiceover:**
-> "The vault doesn't just run one yield strategy. It runs several in parallel. One earns real money. The others are shadows — same conditions, simulated outcomes. Every epoch, an on-chain counter tracks which shadow is beating the active strategy."
+> "To optimize yield, the vault runs multiple strategies in parallel. One earns real money. The others are shadow strategies tested side-by-side. Every hour, our off-chain AI reads the system's own performance history and proposes strategy parameter variants using Groq's llama three point three."
 
 ---
 
-## Shot 4 (0:35–0:55) — The AI proposes
+## Shot 4 (0:50–1:10) — Safety & On-Chain Promotion
 
-**On screen:** Open the proposals feed. Click into a recent proposal. Show the reasoning text from Groq's response. Then cut to terminal: `npm run orchestrate` running, showing the call to llama-3.3.
+**On screen:** Split screen. Left: A pending proposal markdown file. Right: The on-chain win counter ticking up to 5/5. Trigger a promotion transaction on-chain.
 
 **Voiceover:**
-> "Once an hour, an LLM reads the system's own performance and proposes a new strategy variant. Groq's llama three point three, reading our second brain — strategy specs, scoring rules, recent history — and writing a structured proposal as markdown."
+> "But the AI cannot touch real capital. The AI thinks, but the chain decides. Only strategies that win over consecutive evaluation epochs on-chain can be promoted. Once a strategy proves itself, anyone can trustlessly call the promotion transaction to redeploy the pooled vault assets."
 
 ---
 
-## Shot 5 (0:55–1:15) — Autonomous deployment (the killer beat)
+## Shot 5 (1:10–1:30) — Close & Mainnet Proof
 
-**On screen:** Split screen. Left: the proposal markdown file at `~/brain/skills/agentfloat-strategies/proposals/2026-05-26-999-parameter_variant.md`. Right: OKLink showing the deployment transaction at `0x4245ab63…` and the resulting contract at `0xb74204…`.
+**On screen:** AgentFloat brand mark on cream background, displaying:
+* **Hook Address:** `0x5Ba6671e8219C34edA373BF95895306929174580`
+* **Vault Address:** `0xbF06de108735332D1EDb81C7A77A750DD428a6f4`
+* **GitHub:** `github.com/ronkenx9/agentfloat-hook`
 
 **Voiceover:**
-> "Approved proposals flow through guardrails — operating mode, audit requirements, daily caps — then into the deploy loop. This contract on X Layer Testnet was deployed yesterday by the AI. No human in the loop. The proposal became a registered shadow strategy in two transactions."
-
----
-
-## Shot 6 (1:15–1:30) — Close
-
-**On screen:** AgentFloat brand mark on cream background. Underneath, three lines:
-- "Yield routing that learns and ships its own upgrades."
-- "github.com/ronkenx9/agentfloat-hook"
-- "Hook the Future · @XLayerOfficial · @Uniswap · @flapdotsh"
-
-**Voiceover:**
-> "AgentFloat. Yield routing that learns and ships its own upgrades. Built for Hook the Future on X Layer."
-
----
-
-## Recording checklist
-
-- [ ] Open dashboard at `http://localhost:3000` BEFORE recording — verify agent is alive and proposals are present
-- [ ] Open OKLink in a second tab pointed at the deployment tx so cuts are instant
-- [ ] Have the proposal markdown file open in a third tab (VSCode or just preview)
-- [ ] QuickTime Screen Recording → Window selection → 1920×1080 if available
-- [ ] Record voiceover separately in QuickTime/Audacity → import to iMovie
-- [ ] Trim to 75–90 seconds — if longer, cut shot 1 or 6 first
-- [ ] Export H.264 mp4 1080p, upload as unlisted YouTube → grab share link → put in `docs/submission.md` and the Google form
-
-## Backup (no voiceover)
-
-Same six shots, but with on-screen captions matching the voiceover lines. Slower-paced (2s per caption). Still under 90s. Less dynamic but ships without needing to record audio.
+> "AgentFloat is verified and live on X Layer Mainnet. Yield routing that learns and ships its own upgrades. Built for Hook the Future on X Layer."
