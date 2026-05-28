@@ -43,7 +43,7 @@ contract DeployScript is Script {
         console.log("Deployed FloatVault at:", address(vault));
 
         // 4. Deploy Strategies
-        IdleStrategy idle = new IdleStrategy(usdcAddr);
+        IdleStrategy idle = new IdleStrategy(usdcAddr, address(vault));
         console.log("Deployed IdleStrategy at:", address(idle));
 
         // 5. Register strategies in FloatVault
@@ -54,9 +54,10 @@ contract DeployScript is Script {
             // Aave Pool on X Layer: 0xE3F3Caefdd7180F884c01E57f65Df979Af84f116
             // aUSDT0 token on X Layer: 0xF356ae412dB5df43BD3a10746f7ad4e1C4De4297
             AaveStrategy aaveStrat = new AaveStrategy(
-                usdcAddr, 
-                0xE3F3Caefdd7180F884c01E57f65Df979Af84f116, 
-                0xF356ae412dB5df43BD3a10746f7ad4e1C4De4297
+                usdcAddr,
+                0xE3F3Caefdd7180F884c01E57f65Df979Af84f116,
+                0xF356ae412dB5df43BD3a10746f7ad4e1C4De4297,
+                address(vault)
             );
             console.log("Deployed AaveStrategy at:", address(aaveStrat));
             vault.registerStrategy(address(aaveStrat), true); // shadow (id = 2)

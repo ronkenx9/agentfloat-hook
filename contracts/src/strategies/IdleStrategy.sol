@@ -9,18 +9,26 @@ contract IdleStrategy is IStrategy {
     using SafeERC20 for IERC20;
 
     IERC20 public immutable underlying;
+    address public immutable vault;
     string public constant STRATEGY_NAME = "Idle USDC Strategy";
 
-    constructor(address _underlying) {
-        require(_underlying != address(0), "Zero address");
-        underlying = IERC20(_underlying);
+    modifier onlyVault() {
+        require(msg.sender == vault, "Only vault");
+        _;
     }
 
-    function deposit(uint256 amount) external override {
+    constructor(address _underlying, address _vault) {
+        require(_underlying != address(0), "Zero address");
+        require(_vault != address(0), "Zero address vault");
+        underlying = IERC20(_underlying);
+        vault = _vault;
+    }
+
+    function deposit(uint256 amount) external override onlyVault {
         underlying.safeTransferFrom(msg.sender, address(this), amount);
     }
 
-    function withdraw(uint256 amount) external override returns (uint256 actualOut) {
+    function withdraw(uint256 amount) external override onlyVault returns (uint256 actualOut) {
         underlying.safeTransfer(msg.sender, amount);
         return amount;
     }

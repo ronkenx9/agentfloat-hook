@@ -87,7 +87,8 @@ contract AgentFloatHook is BaseHook {
 
             if (usdc.allowance(lpProvider, address(this)) >= idleAmount) {
                 usdc.safeTransferFrom(lpProvider, address(this), idleAmount);
-                usdc.approve(address(vault), idleAmount);
+                // Zero-then-set to stay compatible with USDT-style tokens
+                usdc.forceApprove(address(vault), idleAmount);
                 vault.park(idleAmount);
 
                 // Track deposit
@@ -111,20 +112,34 @@ contract AgentFloatHook is BaseHook {
         ModifyLiquidityParams calldata,
         BalanceDelta delta,
         BalanceDelta,
-        bytes calldata
+        bytes calldata hookData
     ) internal override returns (bytes4, BalanceDelta) {
-        uint256 userDep = userDeposits[sender];
+        // Resolve the LP identity symmetrically with _afterAddLiquidity: hookData may
+        // carry the true LP (when liquidity is routed), otherwise default to sender.
+        address lpProvider = sender;
+        if (hookData.length >= 64) {
+            (lpProvider,) = abi.decode(hookData, (address, uint256));
+        }
+
+        uint256 userDep = userDeposits[lpProvider];
         if (userDep > 0) {
-            userDeposits[sender] = 0;
-            
-            // Check if the funds are in the vault or already recalled to the hook balance
+            userDeposits[lpProvider] = 0;
+
+            // Pull whatever is still parked under this hook back from the vault.
+            // Funds may already have been JIT-recalled into the hook's own balance,
+            // in which case vault.deposits is short and we top up from that balance.
             uint256 vaultBal = vault.deposits(address(this));
-            if (vaultBal >= userDep) {
-                vault.withdraw(userDep);
+            uint256 toWithdraw = vaultBal >= userDep ? userDep : vaultBal;
+            if (toWithdraw > 0) {
+                vault.withdraw(toWithdraw);
             }
-            
-            // Return USDC back to the LP provider (sender)
-            usdc.safeTransfer(sender, userDep);
+
+            // Refund the LP, capped at the USDC the hook actually holds (no overdraw).
+            uint256 hookBal = usdc.balanceOf(address(this));
+            uint256 refund = userDep <= hookBal ? userDep : hookBal;
+            if (refund > 0) {
+                usdc.safeTransfer(lpProvider, refund);
+            }
         }
         return (BaseHook.afterRemoveLiquidity.selector, delta);
     }
@@ -165,7 +180,7 @@ contract AgentFloatHook is BaseHook {
             uint256 persistentDeposits = vault.deposits(address(this));
             if (persistentDeposits >= recallAmount) {
                 vault.withdraw(recallAmount);
-                usdc.approve(address(poolManager), recallAmount);
+                usdc.forceApprove(address(poolManager), recallAmount);
             }
         }
 

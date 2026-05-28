@@ -116,11 +116,25 @@ function buildState() {
       testsTotal: 8,
     },
     contracts: {
-      vault: process.env.VAULT_ADDRESS || '0x4d33FD7B077c1a23221252c3FFEe4261c8a67c5f',
-      hook: process.env.HOOK_ADDRESS || '0x3A00B5A2F15bE68AfE5415290ca4D3022e3B3b5F',
+      vault:
+        process.env.VAULT_ADDRESS ||
+        (process.env.X_LAYER_CHAIN_ID === '196'
+          ? '0xbF06de108735332D1EDb81C7A77A750DD428a6f4'
+          : '0x4d33FD7B077c1a23221252c3FFEe4261c8a67c5f'),
+      hook:
+        process.env.HOOK_ADDRESS ||
+        (process.env.X_LAYER_CHAIN_ID === '196'
+          ? '0x5Ba6671e8219C34edA373BF95895306929174580'
+          : '0x3A00B5A2F15bE68AfE5415290ca4D3022e3B3b5F'),
       poolManager:
-        process.env.POOL_MANAGER_ADDRESS || '0x1BB8824110DF8ED603eBb203C19cC2Ba8FdA8fbe',
-      explorerBase: 'https://www.oklink.com/xlayer-test',
+        process.env.POOL_MANAGER_ADDRESS ||
+        (process.env.X_LAYER_CHAIN_ID === '196'
+          ? '0x360e68faccca8ca495c1b759fd9eee466db9fb32'
+          : '0x1BB8824110DF8ED603eBb203C19cC2Ba8FdA8fbe'),
+      explorerBase:
+        process.env.X_LAYER_CHAIN_ID === '196'
+          ? 'https://www.oklink.com/xlayer'
+          : 'https://www.oklink.com/xlayer-test',
     },
   };
 }

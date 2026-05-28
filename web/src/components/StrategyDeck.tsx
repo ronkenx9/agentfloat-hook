@@ -22,6 +22,9 @@ interface Score {
 
 interface State {
   strategies: Strategy[];
+  contracts?: {
+    explorerBase: string;
+  };
 }
 
 export function StrategyDeck() {
@@ -30,6 +33,7 @@ export function StrategyDeck() {
   const [flipped, setFlipped] = useState<number | null>(null);
 
   const strategies = state?.strategies ?? [];
+  const explorerBase = state?.contracts?.explorerBase || "https://www.oklink.com/xlayer";
   const scoresByStrategy = useMemo(() => {
     const map = new Map<number, number[]>();
     for (const s of scoresResp?.scores ?? []) {
@@ -67,6 +71,7 @@ export function StrategyDeck() {
                 scores={scoresByStrategy.get(s.strategy_id) ?? []}
                 isFlipped={flipped === s.strategy_id}
                 onFlip={() => setFlipped(flipped === s.strategy_id ? null : s.strategy_id)}
+                explorerBase={explorerBase}
               />
             ))}
           </div>
@@ -81,11 +86,13 @@ function StrategyCard({
   scores,
   isFlipped,
   onFlip,
+  explorerBase,
 }: {
   strategy: Strategy;
   scores: number[];
   isFlipped: boolean;
   onFlip: () => void;
+  explorerBase: string;
 }) {
   const status = strategy.status;
   const accent =
@@ -176,7 +183,7 @@ function StrategyCard({
                 Contract
               </span>
               <a
-                href={`https://www.oklink.com/xlayer-test/address/${strategy.address}`}
+                href={`${explorerBase}/address/${strategy.address}`}
                 target="_blank"
                 rel="noreferrer"
                 onClick={(e) => e.stopPropagation()}

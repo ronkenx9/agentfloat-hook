@@ -207,10 +207,22 @@ export function loadRealState(): DashboardState {
     strategies,
     health,
     contracts: {
-      vault: '0x4d33FD7B077c1a23221252c3FFEe4261c8a67c5f',
-      hook: '0x3A00B5A2F15bE68AfE5415290ca4D3022e3B3b5F',
-      poolManager: '0x1BB8824110DF8ED603eBb203C19cC2Ba8FdA8fbe',
-      explorerBase: 'https://www.oklink.com/xlayer-test',
+      vault: (process.env.NEXT_PUBLIC_VAULT_ADDRESS ||
+        (process.env.NEXT_PUBLIC_CHAIN_ID === '1952' || process.env.X_LAYER_CHAIN_ID === '1952'
+          ? '0x4d33FD7B077c1a23221252c3FFEe4261c8a67c5f'
+          : '0xbF06de108735332D1EDb81C7A77A750DD428a6f4')) as `0x${string}`,
+      hook: (process.env.NEXT_PUBLIC_HOOK_ADDRESS ||
+        (process.env.NEXT_PUBLIC_CHAIN_ID === '1952' || process.env.X_LAYER_CHAIN_ID === '1952'
+          ? '0x3A00B5A2F15bE68AfE5415290ca4D3022e3B3b5F'
+          : '0x5Ba6671e8219C34edA373BF95895306929174580')) as `0x${string}`,
+      poolManager: (process.env.NEXT_PUBLIC_POOL_MANAGER_ADDRESS ||
+        (process.env.NEXT_PUBLIC_CHAIN_ID === '1952' || process.env.X_LAYER_CHAIN_ID === '1952'
+          ? '0x1BB8824110DF8ED603eBb203C19cC2Ba8FdA8fbe'
+          : '0x360e68faccca8ca495c1b759fd9eee466db9fb32')) as `0x${string}`,
+      explorerBase:
+        process.env.NEXT_PUBLIC_CHAIN_ID === '1952' || process.env.X_LAYER_CHAIN_ID === '1952'
+          ? 'https://www.oklink.com/xlayer-test'
+          : 'https://www.oklink.com/xlayer',
     },
     isDemo: false,
   };

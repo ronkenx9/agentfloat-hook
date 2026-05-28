@@ -12,9 +12,17 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import * as dotenv from 'dotenv';
 import { loadStrategySpecs, type StrategySpec } from './brain';
 
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config();
+
 const BRAIN_PATH = process.env.BRAIN_PATH || path.join(os.homedir(), 'brain');
+const EXPLORER_BASE = process.env.X_LAYER_CHAIN_ID === '196'
+  ? 'https://www.oklink.com/xlayer'
+  : 'https://www.oklink.com/xlayer-test';
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -431,7 +439,7 @@ function renderHistory(opts: {
     lines.push('| Date | From | To | Δ Score (μbps) | Consecutive | Tx |');
     lines.push('|------|------|----|----|----|----|');
     for (const p of promotions) {
-      const txDisplay = p.txHash ? `[\`${p.txHash.slice(0, 10)}…\`](https://www.oklink.com/xlayer-test/tx/${p.txHash})` : '—';
+      const txDisplay = p.txHash ? `[\`${p.txHash.slice(0, 10)}…\`](${EXPLORER_BASE}/tx/${p.txHash})` : '—';
       lines.push(
         `| ${p.date} | [${p.fromStrategyId}] ${p.fromStrategyName} | [${p.toStrategyId}] ${p.toStrategyName} | ${p.scoreDelta} | ${p.consecutiveEpochs} | ${txDisplay} |`,
       );

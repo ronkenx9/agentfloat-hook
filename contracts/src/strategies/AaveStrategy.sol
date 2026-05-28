@@ -39,18 +39,26 @@ contract AaveStrategy is IStrategy {
     IERC20 public immutable underlying;
     IAavePool public immutable pool;
     IERC20 public immutable aToken;
+    address public immutable vault;
     string public constant STRATEGY_NAME = "Aave V3 Yield Strategy";
 
     uint256 public storedBalance;
     uint256 public lastLiquidityIndex;
 
-    constructor(address _underlying, address _pool, address _aToken) {
+    modifier onlyVault() {
+        require(msg.sender == vault, "Only vault");
+        _;
+    }
+
+    constructor(address _underlying, address _pool, address _aToken, address _vault) {
         require(_underlying != address(0), "Zero address underlying");
         require(_pool != address(0), "Zero address pool");
         require(_aToken != address(0), "Zero address aToken");
+        require(_vault != address(0), "Zero address vault");
         underlying = IERC20(_underlying);
         pool = IAavePool(_pool);
         aToken = IERC20(_aToken);
+        vault = _vault;
         lastLiquidityIndex = getAaveLiquidityIndex();
     }
 
@@ -59,7 +67,7 @@ contract AaveStrategy is IStrategy {
         return uint256(data.liquidityIndex);
     }
 
-    function deposit(uint256 amount) external override {
+    function deposit(uint256 amount) external override onlyVault {
         // Update simulated balance before receiving new funds
         storedBalance = currentValue();
         lastLiquidityIndex = getAaveLiquidityIndex();
@@ -74,7 +82,7 @@ contract AaveStrategy is IStrategy {
         storedBalance += amount;
     }
 
-    function withdraw(uint256 amount) external override returns (uint256 actualOut) {
+    function withdraw(uint256 amount) external override onlyVault returns (uint256 actualOut) {
         storedBalance = currentValue();
         lastLiquidityIndex = getAaveLiquidityIndex();
 

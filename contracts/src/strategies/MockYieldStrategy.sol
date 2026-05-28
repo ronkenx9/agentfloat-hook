@@ -20,6 +20,11 @@ contract MockYieldStrategy is IStrategy {
     uint256 public bpsPerBlock; // 1 bps = 100 (using 6 decimals for precision, e.g. 1000 = 0.1% per block)
     uint256 public storedBalance;
 
+    modifier onlyVault() {
+        require(msg.sender == vault, "Only vault");
+        _;
+    }
+
     constructor(address _underlying, address _vault, uint256 _bpsPerBlock) {
         require(_underlying != address(0), "Zero address underlying");
         require(_vault != address(0), "Zero address vault");
@@ -46,7 +51,7 @@ contract MockYieldStrategy is IStrategy {
         return baseAmount + yield;
     }
 
-    function deposit(uint256 amount) external override {
+    function deposit(uint256 amount) external override onlyVault {
         storedBalance = _accrueYield();
         lastUpdateBlock = block.number;
 
@@ -54,7 +59,7 @@ contract MockYieldStrategy is IStrategy {
         storedBalance += amount;
     }
 
-    function withdraw(uint256 amount) external override returns (uint256 actualOut) {
+    function withdraw(uint256 amount) external override onlyVault returns (uint256 actualOut) {
         storedBalance = _accrueYield();
         lastUpdateBlock = block.number;
 

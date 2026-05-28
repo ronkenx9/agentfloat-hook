@@ -64,3 +64,6 @@ brain/
 # Twitter banner export artefacts (saved from x.com)
 web/x banner*
 *_files/
+
+# Large demo video binaries (kept out of git)
+*.mp4

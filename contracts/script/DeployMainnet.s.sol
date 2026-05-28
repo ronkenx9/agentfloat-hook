@@ -47,14 +47,15 @@ contract DeployMainnet is Script {
         console.log("FloatVault  :", address(vault));
 
         // 2. IdleStrategy (baseline floor -holds USDT, no yield)
-        IdleStrategy idle = new IdleStrategy(XLayerMainnet.USDT);
+        IdleStrategy idle = new IdleStrategy(XLayerMainnet.USDT, address(vault));
         console.log("IdleStrategy:", address(idle));
 
         // 3. AaveStrategy (real Aave V3 USDT lending market)
         AaveStrategy aave = new AaveStrategy(
             XLayerMainnet.USDT,
             XLayerMainnet.AAVE_POOL,
-            XLayerMainnet.AUSDT
+            XLayerMainnet.AUSDT,
+            address(vault)
         );
         console.log("AaveStrategy:", address(aave));
 

@@ -319,9 +319,11 @@ section::after {
 
 ---
 
-## Concentrated liquidity can go quiet.
+## Out-of-range capital collapses pool depth.
 
-When a v4 LP position drifts out of range, that capital stops earning trading fees. AgentFloat treats the idle interval as yield inventory, then recalls it when swaps need liquidity again.
+When a concentrated position drifts out of range, depth collapses and the pool's effective spread widens—allowing arbitrageurs to exploit it before rebalancers can act. 
+
+AgentFloat sweeps this idle capital to earn yield, but recalls it just-in-time when swaps occur, instantly restoring depth and tight spreads.
 
 <div class="kpis">
   <div class="kpi"><strong>v4</strong><span>hook surface</span></div>
@@ -405,7 +407,7 @@ The AI can propose and deploy shadows under policy. Real capital is gated by the
 | AgentFloatHook | `0x5Ba6671e…4580` | permission bits `0x580` |
 | FloatVault | `0xbF06de10…a6f4` | strategy registry |
 | Flap Factory | `0x87D665B8…24F8` | yield tax vaults |
-| AaveStrategy | `0x4C109f12…56E1` | real Aave V3 USDT |
+| AaveStrategy | `0xB433487F…bFEa` | real Aave V3 USDT (`onlyVault`-guarded) |
 | IdleStrategy | `0xf292e500…5EEb` | baseline |
 | PoolManager | `0x360e68fa…fb32` | canonical v4 |
 | USDT / USDC | `0x779Ded0c…3736` | USDt0 |
@@ -482,7 +484,7 @@ The AI can propose and deploy shadows under policy. Real capital is gated by the
   <div class="kpi"><strong>4,800+</strong><span>scoring epochs posted to chain</span></div>
   <div class="kpi"><strong>2,214</strong><span>epochs analyzed by consolidator</span></div>
   <div class="kpi"><strong>6</strong><span>LLM proposals across 36h</span></div>
-  <div class="kpi"><strong>12/12</strong><span>Forge tests passing</span></div>
+  <div class="kpi"><strong>13/13</strong><span>Forge tests passing</span></div>
 </div>
 
 <div class="caption"><span class="mono">2</span> autonomous on-chain promotions recorded in README; history wiki currently consolidates <span class="mono">1</span> structured promotion event.</div>

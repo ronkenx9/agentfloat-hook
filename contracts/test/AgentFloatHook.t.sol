@@ -34,7 +34,7 @@ contract AgentFloatHookTest is Test, Deployers {
         vault = new FloatVault(address(mockUsdc));
 
         // 3. Deploy IdleStrategy and register it in the Vault
-        idleStrategy = new IdleStrategy(address(mockUsdc));
+        idleStrategy = new IdleStrategy(address(mockUsdc), address(vault));
         vault.registerStrategy(address(idleStrategy), false); // Active strategy
 
         // 4. Determine target address with correct permission flags encoded in low 14 bits

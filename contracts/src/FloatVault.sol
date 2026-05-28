@@ -4,9 +4,10 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./interfaces/IStrategy.sol";
 
-contract FloatVault is Ownable {
+contract FloatVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     IERC20 public immutable usdc;
@@ -66,7 +67,7 @@ contract FloatVault is Ownable {
     }
 
     // Agent parks idle USDC into the vault
-    function park(uint256 amount) external {
+    function park(uint256 amount) external nonReentrant {
         require(amount > 0, "Amount must be > 0");
         usdc.safeTransferFrom(msg.sender, address(this), amount);
         deposits[msg.sender] += amount;
@@ -90,7 +91,7 @@ contract FloatVault is Ownable {
     }
 
     // Agent withdraws USDC from the vault instantly
-    function withdraw(uint256 amount) external {
+    function withdraw(uint256 amount) external nonReentrant {
         require(amount > 0, "Amount must be > 0");
         require(deposits[msg.sender] >= amount, "Insufficient deposit");
         
@@ -167,7 +168,7 @@ contract FloatVault is Ownable {
     }
 
     // Promote shadow strategy to active
-    function promote(uint256 strategyId) external {
+    function promote(uint256 strategyId) external nonReentrant {
         require(strategyId <= strategyCount && strategyId != 0, "Invalid strategy ID");
         StrategyEntry storage newActive = strategies[strategyId];
         require(newActive.isShadow, "Strategy must be shadow");

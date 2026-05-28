@@ -23,7 +23,7 @@ contract FloatVaultTest is Test {
         usdc = new MockUSDC();
         vault = new FloatVault(address(usdc));
         
-        idleStrategy = new IdleStrategy(address(usdc));
+        idleStrategy = new IdleStrategy(address(usdc), address(vault));
         yieldStrategy = new MockYieldStrategy(address(usdc), address(vault), 1000); // 1000 = 0.1% per block
         
         vault.setPromoter(promoter);
@@ -75,6 +75,32 @@ contract FloatVaultTest is Test {
         assertEq(usdc.balanceOf(address(idleStrategy)), 300 * 10**6);
         assertEq(usdc.balanceOf(user), 700 * 10**6);
         vm.stopPrank();
+    }
+
+    function test_Revert_DirectStrategyWithdraw() public {
+        // Fund the active strategy via the vault
+        vm.startPrank(owner);
+        vault.registerStrategy(address(idleStrategy), false);
+        vm.stopPrank();
+
+        vm.startPrank(user);
+        usdc.approve(address(vault), 500 * 10**6);
+        vault.park(500 * 10**6);
+        vm.stopPrank();
+
+        // An attacker must NOT be able to drain the strategy directly, bypassing the vault.
+        address attacker = address(0xBAD);
+        vm.prank(attacker);
+        vm.expectRevert(bytes("Only vault"));
+        idleStrategy.withdraw(500 * 10**6);
+
+        // Direct deposit is also gated.
+        vm.prank(attacker);
+        vm.expectRevert(bytes("Only vault"));
+        idleStrategy.deposit(1);
+
+        // Funds remain intact in the strategy.
+        assertEq(usdc.balanceOf(address(idleStrategy)), 500 * 10**6);
     }
 
     function test_PostScore() public {

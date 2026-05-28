@@ -10,7 +10,8 @@ import { syncFromBrain } from './store';
 import { runDeployer } from './deployer';
 
 export async function startWatcher() {
-  console.log(`[Watcher] Connecting to X Layer testnet at ${CONFIG.rpcUrl}...`);
+  const isMainnet = CONFIG.chainId === 196;
+  console.log(`[Watcher] Connecting to X Layer ${isMainnet ? 'mainnet' : 'testnet'} at ${CONFIG.rpcUrl}...`);
 
   const publicClient = createPublicClient({
     chain: xLayerTestnetChain,

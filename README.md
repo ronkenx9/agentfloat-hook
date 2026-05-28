@@ -6,19 +6,26 @@
 
 ---
 
-## What happens when you swap
+## Why AgentFloat?
 
-```
-1. LP adds liquidity to a v4 pool with AgentFloatHook attached
-2. Price moves out of the LP's range → that capital is now idle
-3. afterAddLiquidity → the hook parks the idle USDT into the vault → vault supplies it to Aave V3 (earning yield)
-4. A swap comes in → beforeSwap → the hook recalls capital just-in-time so the pool can settle
-5. In the background: an AI scores yield strategies and proposes better ones; an on-chain
-   consecutiveWins counter promotes a winner only after it proves itself — no AI can move
-   real capital on its own
-```
+### The Problem: Idle Capital & Collapsed Depth
+In concentrated liquidity pools (like Uniswap v4), Liquidity Providers (LPs) choose specific price ranges to deploy their assets. When the market price moves outside this range:
+1. **Capital sits idle:** It stops earning trading fees.
+2. **Depth collapses:** When a large position goes out of range, the pool's liquidity depth drops, and the effective spread widens.
+3. **Arbitrageurs exploit the pool:** Arbitrage bots spot these widened spreads instantly and exploit the price differences before LPs can manually rebalance their positions.
 
-The hook is the product. The AI is the optimization layer. The chain is the final authority on what touches money.
+### The Solution: JIT (Just-In-Time) Recall Hook
+AgentFloat solves this using a Uniswap v4 Hook that monitors and routes capital dynamically:
+* **Idle Sweeps:** When a position goes out of range, the hook automatically sweeps the idle capital into the `FloatVault` to generate yield in active strategies like Aave V3.
+* **Just-In-Time Recall:** The moment a swap starts, the hook's `beforeSwap` callback instantly pulls the capital back into the pool.
+* **Spread Protection:** By recalling the capital in the exact transaction of the trade, the pool's full depth is restored. The spread stays tight, traders get perfect execution, and LPs capture yield while waiting.
+
+### The Guardrail: "The AI Thinks, the Chain Decides"
+To optimize yield, an off-chain AI continuously simulates and proposes alternative strategies. But the AI has zero permission to move real capital:
+* **On-Chain Gatekeeper:** A strategy must win consecutive performance checks against the active strategy directly on-chain.
+* **Trustless Promotion:** Once a strategy proves itself, anyone can call `promote()` on-chain to migrate the pool's capital. The AI cannot bypass this rule.
+
+---
 
 ---
 
@@ -31,7 +38,7 @@ The hook is the product. The AI is the optimization layer. The chain is the fina
 5. **Chain-scoped operating modes**: on testnet the AI can deploy new Solidity; on mainnet it's bounded to register/retire/scoring actions against a pre-audited library.
 6. **Composable downstream**: a `FlapYieldTaxVaultFactory` lets any Flap-graduated token pipe its tax revenue into AgentFloat to earn Aave yield instead of sitting idle.
 
-12/12 Forge tests passing. Real Aave V3 integration. ~$0.09 to deploy the entire system to X Layer mainnet.
+13/13 Forge tests passing (incl. a strategy-drain regression test). Real Aave V3 integration. ~$0.09 to deploy the entire system to X Layer mainnet.
 
 ---
 
@@ -42,7 +49,7 @@ The hook is the product. The AI is the optimization layer. The chain is the fina
 | **AgentFloatHook** | [`0x5Ba6671e8219C34edA373BF95895306929174580`](https://www.oklink.com/xlayer/address/0x5Ba6671e8219C34edA373BF95895306929174580) | 5,101 b · permission bits `0x580` |
 | **FloatVault** | [`0xbF06de108735332D1EDb81C7A77A750DD428a6f4`](https://www.oklink.com/xlayer/address/0xbF06de108735332D1EDb81C7A77A750DD428a6f4) | 5,115 b |
 | **FlapYieldTaxVaultFactory** | [`0x87D665B83557365ADf320a439B8a2DFD03c024F8`](https://www.oklink.com/xlayer/address/0x87D665B83557365ADf320a439B8a2DFD03c024F8) | 10,050 b |
-| **AaveStrategy** (real Aave V3 USDT) | [`0x4C109f12d2FA55037439b73CE4E9Ee2C1e1656E1`](https://www.oklink.com/xlayer/address/0x4C109f12d2FA55037439b73CE4E9Ee2C1e1656E1) | 2,429 b |
+| **AaveStrategy** (real Aave V3 USDT, `onlyVault`-guarded) | [`0xB433487F82572FF201A2455BF7a06325a7B8bFEa`](https://www.oklink.com/xlayer/address/0xB433487F82572FF201A2455BF7a06325a7B8bFEa) | 2,5xx b |
 | **IdleStrategy** (baseline) | [`0xf292e500459393F5CfaF8fbccFe1426bC3495EEb`](https://www.oklink.com/xlayer/address/0xf292e500459393F5CfaF8fbccFe1426bC3495EEb) | 939 b |
 
 Attached to canonical X Layer mainnet infrastructure (no PoolManager or Aave redeploy needed):
@@ -56,7 +63,7 @@ Attached to canonical X Layer mainnet infrastructure (no PoolManager or Aave red
 
 Total deploy cost: **0.000372 OKB (~$0.09)** at 0.02 gwei.
 
-**Live yield, verifiable now:** the AaveStrategy `0x4C109…` holds a real interest-bearing **aUSDT** position supplied to Aave V3 — capital that flowed through the vault and is earning lending yield block-by-block. Check `aUSDT.balanceOf(0x4C109f12d2FA55037439b73CE4E9Ee2C1e1656E1)` on chain 196.
+**Live yield, verifiable now:** the AaveStrategy `0xB433…` holds a real interest-bearing **aUSDT** position supplied to Aave V3 — capital that flowed through the vault and is earning lending yield block-by-block. Check `aUSDT.balanceOf(0xB433487F82572FF201A2455BF7a06325a7B8bFEa)` on chain 196. (The prior strategy `0x4C109…` was superseded by this `onlyVault`-hardened build; funds were migrated trustlessly via the on-chain `promote()` path.)
 
 ---
 
@@ -173,19 +180,20 @@ Other guardrails: `max_proposals_per_day`, `max_strategies_registered`, `pinned_
 
 ---
 
-## Test results — 12/12 passing
+## Test results — 13/13 passing
 
 ```
-Ran 3 test suites: 12 tests passed, 0 failed, 0 skipped
+Ran 3 test suites: 13 tests passed, 0 failed, 0 skipped
 
-[PASS] test_Integration_Workflow()                (gas: 693560) — full end-to-end path
+[PASS] test_Integration_Workflow()                (gas: 700264) — full end-to-end path
 [PASS] test_DecentralizedPromotion_Success()       — trustless promote() works
 [PASS] test_DecentralizedPromotion_WinsResetOnLoss() — counter resets correctly
-[PASS] test_ParkAndWithdraw()                       (gas: 267390)
+[PASS] test_ParkAndWithdraw()                       (gas: 274304)
+[PASS] test_Revert_DirectStrategyWithdraw()          — strategy funds are onlyVault-gated
 [PASS] test_PostScore()                              (gas: 147575)
-[PASS] test_Promote()                                (gas: 403565)
-[PASS] test_RegisterStrategy()                       (gas: 181344)
-[PASS] test_Revert_NonPromoterPromote()              (gas: 187358)
+[PASS] test_Promote()                                (gas: 410532)
+[PASS] test_RegisterStrategy()                       (gas: 181338)
+[PASS] test_Revert_NonPromoterPromote()              (gas: 192474)
 [PASS] FlapYieldTaxVault — ERC20 path
 [PASS] FlapYieldTaxVault — native OKB → WOKB path
 [PASS] FlapYieldTaxVault — withdraw with accrued yield
@@ -208,7 +216,7 @@ Ran 3 test suites: 12 tests passed, 0 failed, 0 skipped
 ```bash
 cd contracts
 ./setup.sh                  # installs Foundry deps + builds + runs tests
-forge test                  # 12/12 should pass
+forge test                  # 13/13 should pass
 ```
 
 ### Mainnet deploy (~$0.09 total)
@@ -261,6 +269,9 @@ Built against the Uniswap `v4-security-foundations` threat model.
 
 - **`validateHookAddress(this)` enforced in `BaseHook` constructor** — deployed hook address must encode correct permission bits in its low 14 bits; misdeployed hooks revert at construction. Our mainnet hook at `0x5Ba6671e8219C34edA373BF95895306929174580` encodes `0x580` (afterAddLiquidity + afterRemoveLiquidity + beforeSwap).
 - **`onlyPoolManager` modifier on every external callback** via the canonical `BaseHook` internal-callback pattern (we inlined the canonical source because the installed v4-periphery submodule doesn't ship `src/utils/BaseHook.sol`).
+- **`onlyVault` on every strategy entry point** — `deposit()` and `withdraw()` on `AaveStrategy`/`IdleStrategy`/`MockYieldStrategy` revert unless called by their bound vault, so pooled funds can never be drained by a direct external call to a strategy. Covered by `test_Revert_DirectStrategyWithdraw`.
+- **`ReentrancyGuard` on the vault** — `park()`, `withdraw()`, and `promote()` are `nonReentrant`.
+- **`forceApprove` (zero-then-set)** everywhere the hook grants allowances, for USDT-style tokens that reject non-zero→non-zero `approve`.
 - **Trustless promotion gate** — `consecutiveWins` mapping lives on-chain, anyone can call `promote()` once threshold is met; promotion is not promoter-gated, scoring is.
 - **EIP-1153 transient storage** for tracking parked USDT within the swap transaction lifecycle, reducing storage gas on JIT recall.
 - **Owner-gated strategy registration + score posting** via OpenZeppelin `Ownable`.
@@ -296,7 +307,7 @@ agentfloat-hook/
 │   │   ├── MineHookSalt.s.sol      standalone salt miner
 │   │   ├── DeployFlapFactory.s.sol Flap factory deploy
 │   │   └── XLayerMainnet.sol       canonical external address constants
-│   └── test/                       12 tests, all passing
+│   └── test/                       13 tests, all passing
 │
 ├── agent/                       Off-chain agent (TypeScript)
 │   └── src/

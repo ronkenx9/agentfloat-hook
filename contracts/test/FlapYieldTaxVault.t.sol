@@ -23,7 +23,7 @@ contract FlapYieldTaxVaultTest is Test {
         mockUsdc = new MockUSDC();
         floatVault = new FloatVault(address(mockUsdc));
         
-        idle = new IdleStrategy(address(mockUsdc));
+        idle = new IdleStrategy(address(mockUsdc), address(floatVault));
         floatVault.registerStrategy(address(idle), false); // Register idle as active (ID 1)
         
         factory = new FlapYieldTaxVaultFactory(address(floatVault), guardian);

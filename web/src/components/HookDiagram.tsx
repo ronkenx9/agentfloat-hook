@@ -8,6 +8,11 @@ interface State {
   health: { lastEpochAt: string | null };
   proposals: Array<{ executed_at?: string; status: string }>;
   strategies: Array<{ strategy_id: number; name: string; status: string }>;
+  contracts?: {
+    vault: string;
+    hook: string;
+    explorerBase: string;
+  };
 }
 
 /**
@@ -46,6 +51,13 @@ export function HookDiagram() {
   const shadowCount =
     state?.strategies?.filter((s) => s.status === "shadow" || s.status === "paused").length ?? 0;
 
+  const hookAddress = state?.contracts?.hook || "0x5Ba6671e8219C34edA373BF95895306929174580";
+  const vaultAddress = state?.contracts?.vault || "0xbF06de108735332D1EDb81C7A77A750DD428a6f4";
+  const explorerBase = state?.contracts?.explorerBase || "https://www.oklink.com/xlayer";
+
+  const hookShort = `${hookAddress.slice(0, 6)}…${hookAddress.slice(-4)}`;
+  const vaultShort = `${vaultAddress.slice(0, 6)}…${vaultAddress.slice(-4)}`;
+
   return (
     <section className="border-y border-rule bg-paper" id="how-it-works">
       <div className="max-w-[1180px] mx-auto px-6 py-12">
@@ -72,8 +84,8 @@ export function HookDiagram() {
           {/* Hook */}
           <Node
             label="AgentFloatHook"
-            detail="0x3A00…3b5F"
-            href="https://www.oklink.com/xlayer-test/address/0x3A00B5A2F15bE68AfE5415290ca4D3022e3B3b5F"
+            detail={hookShort}
+            href={`${explorerBase}/address/${hookAddress}`}
           />
 
           <Arrow active={arrow2Active} label="vault.park()" />
@@ -81,8 +93,8 @@ export function HookDiagram() {
           {/* Vault */}
           <Node
             label="FloatVault"
-            detail="0x4d33…7c5f"
-            href="https://www.oklink.com/xlayer-test/address/0x4d33FD7B077c1a23221252c3FFEe4261c8a67c5f"
+            detail={vaultShort}
+            href={`${explorerBase}/address/${vaultAddress}`}
             accent
           />
         </div>
