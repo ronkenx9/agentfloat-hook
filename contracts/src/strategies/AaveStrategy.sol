@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import "../interfaces/IStrategy.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {FullMath} from "v4-core/src/libraries/FullMath.sol";
 
 interface IAavePool {
     struct ReserveConfigurationMap {
@@ -114,8 +115,11 @@ contract AaveStrategy is IStrategy {
             return storedBalance;
         }
 
-        // liquidityIndex is expressed in Ray (27 decimals), so scale properly
-        return (storedBalance * currentIndex) / lastLiquidityIndex;
+        // liquidityIndex is expressed in Ray (27 decimals). Use FullMath.mulDiv
+        // so the intermediate product can't overflow uint256 at any realistic
+        // (balance, index) combo — defensive even though we're nowhere near the
+        // limit today.
+        return FullMath.mulDiv(storedBalance, currentIndex, lastLiquidityIndex);
     }
 
     function asset() external view override returns (address) {

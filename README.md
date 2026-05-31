@@ -281,13 +281,36 @@ Built against the Uniswap `v4-security-foundations` threat model.
 
 ---
 
+## Roadmap — Settlement (V2)
+
+The mainnet hook (`0x5Ba6671e8219C34edA373BF95895306929174580`) encodes permission bits `0x580` = `afterAddLiquidity + afterRemoveLiquidity + beforeSwap`. Park is real and live; **recall pulls capital back into the hook synchronously inside `beforeSwap` but returns `ZERO_DELTA`** — funds land, but the swap's own accounting isn't yet backed by the recalled capital. `0x580` literally cannot return a non-zero `BeforeSwapDelta` — the address would fail `validateHookAddress` if it tried.
+
+**Settlement (V2)** closes that gap. It adds the `beforeSwapReturnDelta` bit (`1<<3`), making the target address encode `0x588`:
+- `1<<10` = afterAddLiquidity (`0x400`)
+- `1<<8`  = afterRemoveLiquidity (`0x100`)
+- `1<<7`  = beforeSwap (`0x080`)
+- `1<<3`  = **beforeSwapReturnDelta** (`0x008`)
+- → **`0x588`**
+
+The V2 contract lives in `contracts/src/AgentFloatHookV2.sol` and:
+- implements a `take`/`settle` round-trip against the PoolManager and returns a signed `BeforeSwapDelta` so the recalled capital actually backs the swap
+- adds the `IMsgSender` + `trustedRouters` allowlist pattern adapted from the [`uniswap-v4-hooks` security skill](https://github.com/igoryuzo/uniswapV4-hooks-skill), resolving the real LP instead of relying on untrusted `hookData`
+- uses `FullMath.mulDiv` everywhere price math touches `sqrtPriceX96`
+
+**Status: audit-pending — not deployed.** Enabling `beforeSwapReturnDelta` makes the hook price-impacting, which moves AgentFloat from Medium to High risk on the standard hook scoring (see `docs/settlement-hardening.md`). High tier requires 2 audits (≥1 math specialist), a mandatory bug bounty, and active monitoring before mainnet redeploy. The CI suite (`forge test --match-contract AgentFloatHookV2Test`) mechanically asserts the `0x588` bit encoding and the permission shape; full integration (real swap + delta-balance invariants + both-direction fuzz) lands with the audit pass.
+
+The live `0x580` hook is unchanged.
+
+---
+
 ## Repository layout
 
 ```
 agentfloat-hook/
 ├── contracts/                  Foundry workspace
 │   ├── src/
-│   │   ├── AgentFloatHook.sol      v4 hook with afterAddLiquidity + beforeSwap
+│   │   ├── AgentFloatHook.sol      v4 hook — 0x580, park + recall (live)
+│   │   ├── AgentFloatHookV2.sol    v4 hook — 0x588, adds settlement (audit-pending)
 │   │   ├── FloatVault.sol          strategy registry + on-chain consecutiveWins
 │   │   ├── base/BaseHook.sol       canonical inlined from v4-periphery
 │   │   ├── strategies/

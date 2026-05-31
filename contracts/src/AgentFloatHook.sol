@@ -86,19 +86,25 @@ contract AgentFloatHook is BaseHook {
             emit IdleLPParked(lpProvider, key.toId(), idleAmount, currentTick);
 
             if (usdc.allowance(lpProvider, address(this)) >= idleAmount) {
+                // Fee-on-transfer guard: park what *actually* arrived, not the
+                // requested amount. USDT0 isn't FoT, but this makes the path
+                // correct for any underlying we might support in future.
+                uint256 balBefore = usdc.balanceOf(address(this));
                 usdc.safeTransferFrom(lpProvider, address(this), idleAmount);
-                // Zero-then-set to stay compatible with USDT-style tokens
-                usdc.forceApprove(address(vault), idleAmount);
-                vault.park(idleAmount);
+                uint256 received = usdc.balanceOf(address(this)) - balBefore;
 
-                // Track deposit
-                userDeposits[lpProvider] += idleAmount;
+                // Zero-then-set to stay compatible with USDT-style tokens
+                usdc.forceApprove(address(vault), received);
+                vault.park(received);
+
+                // Track deposit by what was actually received
+                userDeposits[lpProvider] += received;
 
                 // Gas Optimization: Track the parked amount in transient storage
                 bytes32 slot = TRANSIENT_PARKED_USDC_SLOT;
                 assembly {
                     let current := tload(slot)
-                    tstore(slot, add(current, idleAmount))
+                    tstore(slot, add(current, received))
                 }
             }
         }
