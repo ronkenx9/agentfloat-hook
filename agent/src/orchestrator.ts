@@ -2,8 +2,9 @@
  * Strategy Orchestrator — the AI brain of AgentFloat.
  *
  * Runs hourly. Reads the entire second brain context (history, strategy specs,
- * scoring rules, recent journal entries). Asks Groq llama-3.3 to propose ONE
- * concrete action to improve the system. Writes the proposal to
+ * scoring rules, recent journal entries). Asks an LLM (via the Bankr LLM Gateway,
+ * funded by $agentfloat trading fees) to propose ONE concrete action to improve
+ * the system. Writes the proposal to
  * `~/brain/skills/agentfloat-strategies/proposals/` and logs reasoning to today's
  * journal.
  *
@@ -19,7 +20,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import Groq from 'groq-sdk';
+import OpenAI from 'openai';
 import * as dotenv from 'dotenv';
 import { loadStrategySpecs, loadScoringRules } from './brain';
 
@@ -29,7 +30,10 @@ dotenv.config();
 
 const BRAIN_PATH = process.env.BRAIN_PATH || path.join(os.homedir(), 'brain');
 const PROPOSALS_DIR = path.join(BRAIN_PATH, 'skills', 'agentfloat-strategies', 'proposals');
-const MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+// LLM compute is funded by $agentfloat trading fees via the Bankr LLM Gateway
+// (llm.bankr.bot). Top up credits with `bankr fees claim` → `bankr llm credits`.
+const MODEL = process.env.BANKR_LLM_MODEL || 'deepseek-v3.2';
+const LLM_BASE_URL = process.env.BANKR_LLM_BASE_URL || 'https://llm.bankr.bot/v1';
 
 // ─── Context assembly ────────────────────────────────────────────────────
 
@@ -229,8 +233,9 @@ function logToJournal(filepath: string, proposal: Proposal, modelUsed: string) {
 // ─── Entry point ─────────────────────────────────────────────────────────
 
 export async function runOrchestrator(): Promise<void> {
-  if (!process.env.GROQ_API_KEY) {
-    throw new Error('GROQ_API_KEY missing — set in agent/.env');
+  const apiKey = process.env.BANKR_LLM_KEY;
+  if (!apiKey) {
+    throw new Error('BANKR_LLM_KEY missing — set in agent/.env (the Bankr LLM Gateway key, funded by trading fees)');
   }
 
   console.log(`[Orchestrator] Building brain context...`);
@@ -239,8 +244,10 @@ export async function runOrchestrator(): Promise<void> {
     `[Orchestrator] Loaded ${ctx.specs.length} strategy specs · history=${ctx.history.length}B · scores=${ctx.recentScores.length}B`,
   );
 
-  const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  console.log(`[Orchestrator] Calling ${MODEL}...`);
+  // Bankr gateway is OpenAI-compatible; the SDK sends `Authorization: Bearer <key>`,
+  // which the gateway accepts. Funded by the protocol's own trading fees.
+  const client = new OpenAI({ apiKey, baseURL: LLM_BASE_URL });
+  console.log(`[Orchestrator] Calling ${MODEL} via ${LLM_BASE_URL}...`);
 
   const completion = await client.chat.completions.create({
     model: MODEL,
@@ -254,13 +261,13 @@ export async function runOrchestrator(): Promise<void> {
   });
 
   const raw = completion.choices[0]?.message?.content;
-  if (!raw) throw new Error('Groq returned empty response');
+  if (!raw) throw new Error('LLM gateway returned empty response');
 
   let proposal: Proposal;
   try {
     proposal = JSON.parse(raw);
   } catch (err) {
-    throw new Error(`Failed to parse Groq JSON: ${(err as Error).message}\nRaw: ${raw.slice(0, 400)}`);
+    throw new Error(`Failed to parse LLM JSON: ${(err as Error).message}\nRaw: ${raw.slice(0, 400)}`);
   }
 
   // Validate

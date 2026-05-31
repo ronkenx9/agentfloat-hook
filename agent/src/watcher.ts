@@ -106,12 +106,12 @@ export async function startWatcher() {
         // Runs detached so it doesn't block the scoring loop.
         const orchCadence = opCfg.scoring.orchestrateEveryEpochs;
         if (
-          process.env.GROQ_API_KEY &&
+          process.env.BANKR_LLM_KEY &&
           !orchestratorBusy &&
           epochCount - lastOrchestratedEpoch >= orchCadence
         ) {
           console.log(
-            `[Watcher] Orchestrator firing (epoch ${epochCount}, cadence=${orchCadence}) — Groq llama-3.3 reading brain...`,
+            `[Watcher] Orchestrator firing (epoch ${epochCount}, cadence=${orchCadence}) — LLM gateway reading brain...`,
           );
           orchestratorBusy = true;
           lastOrchestratedEpoch = epochCount;
