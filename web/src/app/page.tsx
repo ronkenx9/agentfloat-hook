@@ -33,7 +33,17 @@ export default async function Home({
   if (useDemo) {
     state = getDemoState();
   } else {
-    state = (await fetchState()) ?? loadRealState();
+    const live = await fetchState();
+    if (live) {
+      state = live;
+    } else {
+      // No live agent API reachable (e.g. a bare Vercel deploy before the API
+      // is hosted). Try the brain filesystem; if that's empty too, fall back to
+      // the demo dataset so the public page renders something coherent. The
+      // `isDemo` badge in the Masthead keeps that honest.
+      const local = loadRealState();
+      state = local.strategies.length > 0 ? local : getDemoState();
+    }
   }
   const hasProposals = state.proposals.length > 0;
 

@@ -123,7 +123,7 @@ export function HookDiagram() {
           />
           <StrategyTile
             heading="LLM proposing next"
-            sub="Groq · ~hourly"
+            sub="Bankr Gateway · ~hourly"
             tone="ai"
           />
         </div>

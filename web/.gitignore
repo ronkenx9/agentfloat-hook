@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local design scratch (not app code)
+/x banner.html
+/x banner_files/
