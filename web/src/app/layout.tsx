@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Source_Serif_4, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { WalletProvider } from "@/lib/wallet";
 
@@ -30,6 +31,7 @@ export default function RootLayout({
     <html lang="en" className={`${serif.variable} ${mono.variable} h-full antialiased`}>
       <body className="min-h-full">
         <WalletProvider>{children}</WalletProvider>
+        <Analytics />
       </body>
     </html>
   );
