@@ -180,7 +180,9 @@ contract AgentFloatHook is BaseHook {
                 tstore(slot, sub(transientParked, recallAmount))
             }
             vault.withdraw(recallAmount);
-            usdc.approve(address(poolManager), recallAmount);
+            // forceApprove (zero-then-set) — USDT rejects non-zero→non-zero approve,
+            // and this transient branch is the hot path on repeated recalls.
+            usdc.forceApprove(address(poolManager), recallAmount);
         } else {
             // Fall back to persistent storage check
             uint256 persistentDeposits = vault.deposits(address(this));

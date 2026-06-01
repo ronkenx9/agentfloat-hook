@@ -94,29 +94,34 @@ contract FloatVault is Ownable, ReentrancyGuard {
     function withdraw(uint256 amount) external nonReentrant {
         require(amount > 0, "Amount must be > 0");
         require(deposits[msg.sender] >= amount, "Insufficient deposit");
-        
-        deposits[msg.sender] -= amount;
-        totalDeposits -= amount;
 
-        // Update totalDeposited for all strategies
+        // Pull from the active strategy FIRST and honor what it actually returns.
+        // A strategy under rounding/stress may hand back less than requested; if
+        // we blindly transferred `amount` the call would revert on an insufficient
+        // balance (or mis-account). Settle on the realized `out` instead.
+        uint256 out = amount;
+        if (activeStrategyId != 0) {
+            address activeStrategy = strategies[activeStrategyId].strategy;
+            out = IStrategy(activeStrategy).withdraw(amount);
+            require(out <= amount, "Strategy over-withdrew");
+        }
+
+        deposits[msg.sender] -= out;
+        totalDeposits -= out;
+
+        // Update totalDeposited for all strategies by the realized amount
         uint256 count = strategyCount;
         for (uint256 i = 1; i <= count; i++) {
-            if (strategies[i].totalDeposited >= amount) {
-                strategies[i].totalDeposited -= amount;
+            if (strategies[i].totalDeposited >= out) {
+                strategies[i].totalDeposited -= out;
             } else {
                 strategies[i].totalDeposited = 0;
             }
         }
 
-        // Pull from active strategy
-        if (activeStrategyId != 0) {
-            address activeStrategy = strategies[activeStrategyId].strategy;
-            IStrategy(activeStrategy).withdraw(amount);
-        }
+        usdc.safeTransfer(msg.sender, out);
 
-        usdc.safeTransfer(msg.sender, amount);
-        
-        emit Withdrawn(msg.sender, amount);
+        emit Withdrawn(msg.sender, out);
     }
 
     // Registers a new strategy

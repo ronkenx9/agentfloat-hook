@@ -16,9 +16,13 @@ export interface StrategyResult {
   score: bigint;
 }
 
-// Custom X Layer chain definition (dynamically configured via env)
+// X Layer chain — dynamically configured from env. NOTE: this is NOT a static
+// testnet definition; `id` and `rpcUrls` are built from CONFIG, so on mainnet
+// (chainId 196) this chain object points at the mainnet RPC. The transport below
+// passes CONFIG.rpcUrl explicitly so there's zero ambiguity about which chain is
+// being polled.
 const isMainnet = CONFIG.chainId === 196;
-export const xLayerTestnetChain = {
+export const xLayerChain = {
   id: CONFIG.chainId,
   name: isMainnet ? 'X Layer Mainnet' : 'X Layer Testnet',
   nativeCurrency: {
@@ -38,16 +42,20 @@ export const xLayerTestnetChain = {
   },
 };
 
+// Back-compat alias — several modules still import the old (misleading) name.
+/** @deprecated misleading legacy name; use `xLayerChain`. */
+export const xLayerTestnetChain = xLayerChain;
+
 const publicClient = createPublicClient({
-  chain: xLayerTestnetChain,
-  transport: http(),
+  chain: xLayerChain,
+  transport: http(CONFIG.rpcUrl),
 });
 
 const account = privateKeyToAccount(CONFIG.promoterPrivateKey as `0x${string}`);
 const walletClient = createWalletClient({
   account,
-  chain: xLayerTestnetChain,
-  transport: http(),
+  chain: xLayerChain,
+  transport: http(CONFIG.rpcUrl),
 });
 
 export async function scoreStrategies() {

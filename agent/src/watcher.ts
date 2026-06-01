@@ -1,5 +1,5 @@
 import { createPublicClient, http } from 'viem';
-import { xLayerTestnetChain } from './scorer';
+import { xLayerChain } from './scorer';
 import { CONFIG, loadOperationalConfig } from './config';
 import { scoreStrategies } from './scorer';
 import { checkPromotions, tickActiveAge } from './promoter';
@@ -14,8 +14,8 @@ export async function startWatcher() {
   console.log(`[Watcher] Connecting to X Layer ${isMainnet ? 'mainnet' : 'testnet'} at ${CONFIG.rpcUrl}...`);
 
   const publicClient = createPublicClient({
-    chain: xLayerTestnetChain,
-    transport: http(),
+    chain: xLayerChain,
+    transport: http(CONFIG.rpcUrl),
   });
 
   let lastBlock = 0n;

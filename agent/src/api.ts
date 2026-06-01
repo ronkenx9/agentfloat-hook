@@ -46,14 +46,21 @@ const ADMIN_WALLETS = (process.env.ADMIN_WALLETS || '')
 
 function send(res: http.ServerResponse, status: number, body: unknown) {
   const json = JSON.stringify(body);
-  res.writeHead(status, {
+  const headers: Record<string, string | number> = {
     'content-type': 'application/json',
     'access-control-allow-origin': ALLOWED_ORIGIN,
     'access-control-allow-methods': 'GET,POST,OPTIONS',
     'access-control-allow-headers': 'content-type, authorization',
-    'access-control-allow-credentials': 'true',
     'content-length': Buffer.byteLength(json),
-  });
+  };
+  // Never pair credentialed CORS with a wildcard origin: browsers reject the
+  // combination, and emitting it would let ANY origin make credentialed requests
+  // to the admin endpoints (/api/mode, /api/proposals/*). Only allow credentials
+  // when the operator pins a concrete origin via DASHBOARD_ORIGIN.
+  if (ALLOWED_ORIGIN !== '*') {
+    headers['access-control-allow-credentials'] = 'true';
+  }
+  res.writeHead(status, headers);
   res.end(json);
 }
 
@@ -85,6 +92,30 @@ function isAdmin(wallet: string): boolean {
 
 // ─── route handlers ───────────────────────────────────────────────────────
 
+// Test counts are read from a forge-generated summary, never hardcoded — so the
+// API can't drift from the real `forge test` result. Returns nulls when the
+// summary isn't present (the dashboard renders that as "—") rather than asserting
+// a fabricated number. Generate via `npm run test:summary` in contracts/.
+function readTestSummary(): { passed: number | null; total: number | null } {
+  const candidates = [
+    process.env.TEST_SUMMARY_PATH,
+    path.resolve(__dirname, '../../contracts/.test-summary.json'),
+  ].filter(Boolean) as string[];
+  for (const p of candidates) {
+    try {
+      if (fs.existsSync(p)) {
+        const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+        if (typeof j.passed === 'number' && typeof j.total === 'number') {
+          return { passed: j.passed, total: j.total };
+        }
+      }
+    } catch {
+      /* fall through to null */
+    }
+  }
+  return { passed: null, total: null };
+}
+
 function buildState() {
   const mode = loadOperatingMode();
   const proposals = getAllProposals();
@@ -92,6 +123,7 @@ function buildState() {
   const scoreCount = getScoreCount();
   const lastEpochAt = getLastScoreTs();
   const agentAlive = lastEpochAt ? Date.now() - new Date(lastEpochAt).getTime() < 10 * 60_000 : false;
+  const testSummary = readTestSummary();
 
   return {
     mode: {
@@ -112,8 +144,8 @@ function buildState() {
       totalEpochs: scoreCount,
       totalProposals: proposals.length,
       totalPromotions: proposals.filter((p: any) => p.status === 'executed').length,
-      testsPassed: 8,
-      testsTotal: 8,
+      testsPassed: testSummary.passed,
+      testsTotal: testSummary.total,
     },
     contracts: {
       vault:
