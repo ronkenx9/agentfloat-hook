@@ -15,6 +15,7 @@
 
 import * as dotenv from 'dotenv';
 import path from 'path';
+import os from 'os';
 import { loadScoringRules, loadStrategySpecs } from './brain';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
@@ -44,6 +45,14 @@ export const TRANSPORT = {
   hookAddress: (process.env.HOOK_ADDRESS || '0x3A00B5A2F15bE68AfE5415290ca4D3022e3B3b5F') as `0x${string}`,
   promoterPrivateKey: derivedPromoterKey as `0x${string}` | undefined,
   pollIntervalMs: parseInt(process.env.POLL_INTERVAL_MS || '5000', 10),
+  // When false, the agent runs read-only: it reads the chain, computes scores,
+  // runs the orchestrator, and serves the API, but performs NO on-chain writes
+  // (postScore/promote/register). This lets a cloud instance serve live data
+  // with zero signing keys. Defaults true so local behavior is unchanged.
+  chainWritesEnabled: process.env.CHAIN_WRITES_ENABLED !== 'false',
+  // Brain vault location — same default as brain.ts. Cloud sets BRAIN_PATH to a
+  // bundled seed dir so nothing depends on a specific home directory.
+  brainPath: process.env.BRAIN_PATH || path.join(os.homedir(), 'brain'),
 };
 
 /**

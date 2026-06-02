@@ -126,6 +126,12 @@ async function promoteStrategy(
   scoreDelta: number,
   consecutive: number,
 ) {
+  if (!CONFIG.chainWritesEnabled) {
+    console.log(
+      `[Promoter] read-only: shadow #${shadowId} (${shadowName}) is eligible to replace #${activeId} (${activeName}) — on-chain promote skipped`,
+    );
+    return;
+  }
   try {
     const hash = await walletClient.writeContract({
       address: CONFIG.vaultAddress,

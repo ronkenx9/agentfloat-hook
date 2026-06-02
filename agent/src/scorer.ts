@@ -114,28 +114,32 @@ export async function scoreStrategies() {
 
       console.log(`[Scorer] Strategy #${id} (${name}): currentValue=${currentValue}, totalDeposited=${totalDeposited}, score=${score}`);
 
-      // Post score to contract
-      try {
-        const hash = await walletClient.writeContract({
-          address: vaultAddress,
-          abi: FLOAT_VAULT_ABI,
-          functionName: 'postScore',
-          args: [id, score],
-          gasPrice: 100000000n, // 0.1 gwei legacy gas price
-        });
-        console.log(`[Scorer] Posted score for Strategy #${id}. Tx Hash: ${hash}`);
-        
-        // Wait for transaction to be mined to prevent nonce collision
-        await publicClient.waitForTransactionReceipt({ hash });
-      } catch (txError) {
-        console.error(`[Scorer] Failed to post score for Strategy #${id}:`, txError);
+      // Post score to contract (skipped entirely in read-only mode, e.g. cloud)
+      if (CONFIG.chainWritesEnabled) {
+        try {
+          const hash = await walletClient.writeContract({
+            address: vaultAddress,
+            abi: FLOAT_VAULT_ABI,
+            functionName: 'postScore',
+            args: [id, score],
+            gasPrice: 100000000n, // 0.1 gwei legacy gas price
+          });
+          console.log(`[Scorer] Posted score for Strategy #${id}. Tx Hash: ${hash}`);
+
+          // Wait for transaction to be mined to prevent nonce collision
+          await publicClient.waitForTransactionReceipt({ hash });
+        } catch (txError) {
+          console.error(`[Scorer] Failed to post score for Strategy #${id}:`, txError);
+        }
+      } else {
+        console.log(`[Scorer] read-only: computed score ${score} for Strategy #${id} (on-chain post skipped)`);
       }
 
       // Log score to ~/brain/raw/agentfloat-strategy-scores.md
       const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
       const logLine = `[${timestamp}] epoch=${currentBlock} strategy=${id} (${name}) score=${score} active=${isActive}\n`;
 
-      const brainDir = '/Users/gadgetplug/brain/raw';
+      const brainDir = path.join(CONFIG.brainPath, 'raw');
       const scoreFilePath = path.join(brainDir, 'agentfloat-strategy-scores.md');
 
       try {

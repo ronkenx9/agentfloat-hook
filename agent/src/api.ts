@@ -33,7 +33,8 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-const PORT = parseInt(process.env.AGENTFLOAT_API_PORT || '4000', 10);
+// Railway/Fly inject PORT; fall back to the agent-specific var, then 4000 (local).
+const PORT = parseInt(process.env.PORT || process.env.AGENTFLOAT_API_PORT || '4000', 10);
 const ALLOWED_ORIGIN = process.env.DASHBOARD_ORIGIN || '*';
 const BRAIN_PATH = process.env.BRAIN_PATH || path.join(os.homedir(), 'brain');
 

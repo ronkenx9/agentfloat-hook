@@ -82,6 +82,12 @@ function extractBpsPerBlock(body: string, headline: string): bigint {
 }
 
 export async function runDeployer(): Promise<number> {
+  // The deployer both deploys a contract and registers it on-chain — both need
+  // the signing key. In read-only mode (e.g. cloud), skip the whole flow.
+  if (!CONFIG.chainWritesEnabled) {
+    return 0;
+  }
+
   const approvedProposals = loadApprovedProposals();
   if (approvedProposals.length === 0) {
     console.log('[Deployer] No approved parameter_variant proposals to deploy.');

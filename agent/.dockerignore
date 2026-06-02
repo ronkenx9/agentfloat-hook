@@ -1,0 +1,12 @@
+node_modules
+dist
+.env
+.env.*
+.promoter-new.key
+*.key
+*.log
+.DS_Store
+agentfloat.db
+*.sqlite
+*.sqlite3
+.git
