@@ -29,6 +29,20 @@ export function ProofTier({ state }: { state: DashboardState }) {
               </li>
             ))}
           </ul>
+
+          {/* Community token — lives on Base, separate from the X Layer protocol contracts */}
+          <div className="mono text-[10px] uppercase text-ink-soft mt-5 mb-3">Token · Base</div>
+          <a
+            href="https://basescan.org/token/0xa612beda982e1b9b488a3b6563411343639c5ba3"
+            target="_blank"
+            rel="noreferrer"
+            className="block hover:text-accent"
+          >
+            <span className="serif text-sm block">$AGENTFLOAT</span>
+            <span className="mono text-[10px] text-ink-soft">
+              {truncate("0xa612beda982e1b9b488a3b6563411343639c5ba3")}
+            </span>
+          </a>
         </div>
 
         {/* Strategy registry */}
