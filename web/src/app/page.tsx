@@ -188,8 +188,8 @@ export default async function Home({
               On-chain, in the open.
             </h2>
             <p className="text-sm mt-3 opacity-80 max-w-[44ch]">
-              Six verified contracts on X Layer Testnet. Eight tests passing. One AI-generated
-              strategy already shipped autonomously.
+              Verified contracts live on X Layer Mainnet. 18 tests passing. The AI proposes
+              strategies hourly — only on-chain-proven winners ship.
             </p>
           </div>
         }

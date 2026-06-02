@@ -31,7 +31,7 @@ export function ProofTier({ state }: { state: DashboardState }) {
           </ul>
 
           {/* Community token — lives on Base, separate from the X Layer protocol contracts */}
-          <div className="mono text-[10px] uppercase text-ink-soft mt-5 mb-3">Token · Base</div>
+          <div className="mono text-[10px] uppercase text-ink-soft mt-5 mb-3">Utility token · Base</div>
           <a
             href="https://basescan.org/token/0xa612beda982e1b9b488a3b6563411343639c5ba3"
             target="_blank"
