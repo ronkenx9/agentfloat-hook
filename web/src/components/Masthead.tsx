@@ -1,9 +1,21 @@
 import Image from "next/image";
 
-export function Masthead({ isDemo, agentAlive }: { isDemo: boolean; agentAlive: boolean }) {
+export function Masthead({
+  isDemo,
+  agentAlive,
+  activeTab,
+}: {
+  isDemo: boolean;
+  agentAlive: boolean;
+  activeTab: string;
+}) {
+  const querySuffix = isDemo ? "?demo=1" : "";
+  const dashLink = activeTab === "dashboard" ? "#" : isDemo ? "/?demo=1&tab=dashboard" : "/?tab=dashboard";
+  const sandLink = activeTab === "sandbox" ? "#" : isDemo ? "/?demo=1&tab=sandbox" : "/?tab=sandbox";
+
   return (
-    <header style={{ backgroundColor: "var(--paper-cover)" }}>
-      <div className="max-w-[1180px] mx-auto px-6 py-4 flex items-center justify-between">
+    <header style={{ backgroundColor: "var(--paper-cover)" }} className="border-b border-rule-faint">
+      <div className="max-w-[1180px] mx-auto px-6 py-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
         <div className="flex items-center gap-3">
           <Image
             src="/logo.png"
@@ -20,6 +32,31 @@ export function Masthead({ isDemo, agentAlive }: { isDemo: boolean; agentAlive: 
             </span>
           </div>
         </div>
+
+        {/* Navigation Tabs */}
+        <nav className="flex items-center gap-6 mono text-[10px] uppercase tracking-wider">
+          <a
+            href={dashLink}
+            className={`transition-colors py-1 ${
+              activeTab === "dashboard"
+                ? "text-ink border-b border-ink font-bold"
+                : "text-ink-soft hover:text-ink"
+            }`}
+          >
+            Dashboard
+          </a>
+          <a
+            href={sandLink}
+            className={`transition-colors py-1 ${
+              activeTab === "sandbox"
+                ? "text-ink border-b border-ink font-bold"
+                : "text-ink-soft hover:text-ink"
+            }`}
+          >
+            Agent Sandbox
+          </a>
+        </nav>
+
         <div className="flex items-center gap-4 text-[10px] uppercase tracking-wider">
           {isDemo ? (
             <span className="mono px-2 py-1 bg-accent text-paper">Demo mode</span>

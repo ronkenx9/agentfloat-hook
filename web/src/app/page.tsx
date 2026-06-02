@@ -13,12 +13,14 @@ import { EventTicker } from "@/components/EventTicker";
 import { HookDiagram } from "@/components/HookDiagram";
 import { HeroMetrics } from "@/components/HeroMetrics";
 import { StrategyDeck } from "@/components/StrategyDeck";
+import { SandboxView } from "@/components/SandboxView";
 
 // Re-render every 30 seconds so live proposals/scores show up without manual refresh.
 export const revalidate = 30;
 
 interface SearchParams {
   demo?: string;
+  tab?: string;
 }
 
 export default async function Home({
@@ -28,6 +30,7 @@ export default async function Home({
 }) {
   const params = await searchParams;
   const useDemo = params.demo === "1";
+  const tab = params.tab === "sandbox" ? "sandbox" : "dashboard";
 
   let state;
   if (useDemo) {
@@ -47,9 +50,36 @@ export default async function Home({
   }
   const hasProposals = state.proposals.length > 0;
 
+  if (tab === "sandbox") {
+    return (
+      <main className="min-h-screen flex flex-col bg-paper text-ink">
+        <Masthead isDemo={state.isDemo} agentAlive={state.health.agentAlive} activeTab={tab} />
+        
+        {/* Live data band */}
+        <LiveTicker initialState={state} />
+
+        {/* Sandbox view */}
+        <SandboxView />
+
+        {/* Colophon */}
+        <footer className="bg-ink text-paper py-10 mt-auto">
+          <div
+            className="max-w-[1180px] mx-auto px-6 flex flex-col md:flex-row items-baseline justify-between gap-4 text-[10px] mono uppercase tracking-[0.12em]"
+            style={{ color: "var(--rule)" }}
+          >
+            <span>AgentFloat · Yield routing that learns</span>
+            <span style={{ color: "var(--ink-faint)" }}>
+              Set in Source Serif 4 + JetBrains Mono · Vol. I MMXXVI
+            </span>
+          </div>
+        </footer>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen flex flex-col">
-      <Masthead isDemo={state.isDemo} agentAlive={state.health.agentAlive} />
+      <Masthead isDemo={state.isDemo} agentAlive={state.health.agentAlive} activeTab={tab} />
 
       {/* Live data band — sits right under masthead */}
       <LiveTicker initialState={state} />
