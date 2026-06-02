@@ -202,6 +202,13 @@ Ran 3 test suites: 13 tests passed, 0 failed, 0 skipped
 
 `test_Integration_Workflow` is the full path: deploy hook via CREATE2 with mined salt → init pool → add out-of-range liquidity → hook routes USDT to vault → swap triggers JIT recall → vault balance returns to zero.
 
+## Try it on Testnet!
+
+Want to try depositing to the vault, minting mock faucet tokens, or seeing the JIT-recall mechanics? 
+
+We have written a step-by-step user guide detailing how to get faucet tokens and interact with the verified contracts either via a local dashboard or directly on-chain:
+👉 **[Testnet Testing Guide](file:///Users/gadgetplug/Documents/vibecoding/agentfloat-hook/docs/testnet_guide.md)**
+
 ---
 
 ## Quick start

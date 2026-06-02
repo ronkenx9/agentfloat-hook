@@ -20,6 +20,10 @@ https://github.com/ronkenx9/agentfloat-hook
 **Project X Account:**
 [TBD — create handle, post the tweet thread in `docs/tweet_thread.md`, paste profile URL here]
 
+**Testnet User Testing Guide:**
+Judges and users can test mock token minting, vault deposits/withdrawals, and observe autonomous AI scoring on X Layer Testnet:
+👉 **[Testnet Testing Guide](file:///Users/gadgetplug/Documents/vibecoding/agentfloat-hook/docs/testnet_guide.md)**
+
 ---
 
 ## ⚡ Deployed Contracts — X Layer Mainnet (Chain 196)
