@@ -10,6 +10,7 @@
     "consolidate": "ts-node src/consolidator.ts",
     "orchestrate": "ts-node src/orchestrator.ts",
     "approve": "ts-node src/approver.ts",
+    "critic": "ts-node src/critic.ts",
     "deploy-proposals": "ts-node src/deployer.ts"
   },
   "dependencies": {

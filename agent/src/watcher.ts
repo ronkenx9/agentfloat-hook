@@ -6,6 +6,7 @@ import { checkPromotions, tickActiveAge } from './promoter';
 import { consolidate } from './consolidator';
 import { runOrchestrator } from './orchestrator';
 import { runApprover } from './approver';
+import { runCritic } from './critic';
 import { syncFromBrain } from './store';
 import { runDeployer } from './deployer';
 
@@ -71,6 +72,15 @@ export async function startWatcher() {
           await runApprover();
         } catch (err) {
           console.warn(`[Watcher] Approver failed (non-fatal): ${(err as Error).message}`);
+        }
+
+        // Critic loop — if on testnet, run the LLM-based critic against pending proposals that have aged.
+        if (CONFIG.chainId === 1952) {
+          try {
+            await runCritic();
+          } catch (err) {
+            console.warn(`[Watcher] Critic failed (non-fatal): ${(err as Error).message}`);
+          }
         }
 
         // API layer — sync brain markdown into SQLite so the dashboard can read state.
