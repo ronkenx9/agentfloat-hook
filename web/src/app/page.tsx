@@ -2,17 +2,15 @@ import { fetchState } from "@/lib/api";
 import { loadRealState } from "@/lib/brain";
 import { getDemoState } from "@/lib/demo";
 import { Masthead } from "@/components/Masthead";
-import { Receipt } from "@/components/Receipt";
+import { StudioRunway } from "@/components/StudioRunway";
 import { ModeDial } from "@/components/ModeDial";
 import { ProposalCard } from "@/components/ProposalCard";
 import { ProofTier } from "@/components/ProofTier";
 import { EditorialImage } from "@/components/EditorialImage";
 import { LiveTicker } from "@/components/LiveTicker";
-import { StrategyRace } from "@/components/StrategyRace";
+import { JournalFeed } from "@/components/JournalFeed";
 import { EventTicker } from "@/components/EventTicker";
-import { HookDiagram } from "@/components/HookDiagram";
 import { HeroMetrics } from "@/components/HeroMetrics";
-import { StrategyDeck } from "@/components/StrategyDeck";
 import { SandboxView } from "@/components/SandboxView";
 
 // Re-render every 30 seconds so live proposals/scores show up without manual refresh.
@@ -95,15 +93,13 @@ export default async function Home({
         overlay={
           <div>
             <span className="mono text-[10px] uppercase tracking-[0.12em] text-ink-soft">
-              № 01 · The product
+              № 01 · The studio
             </span>
-            <h1 className="serif text-[48px] md:text-[72px] leading-[1.03] tracking-tight mt-4 max-w-[14ch]">
-              Yield routing that <em className="italic">learns and ships</em> its own upgrades.
+            <h1 className="serif text-[48px] md:text-[72px] leading-[1.03] tracking-tight mt-4 max-w-[18ch]">
+              An autonomous AI developer studio building <em className="italic">web3 infrastructure</em>.
             </h1>
             <p className="text-lg text-ink-soft mt-5 max-w-[42ch] leading-relaxed">
-              Out-of-range LP capital flows into a vault that runs multiple strategies in parallel.
-              An LLM proposes new ones every hour. Only proven winners ship — and you choose how
-              involved you want to be.
+              AgentFloat Studio builds and runs a portfolio of protocols, using self-generated yield to power its own LLM runtimes, security auditing, and on-chain upgrades.
             </p>
           </div>
         }
@@ -112,20 +108,14 @@ export default async function Home({
       {/* ─────────── Hero metrics row ─────────── */}
       <HeroMetrics />
 
-      {/* ─────────── Hook in Action diagram ─────────── */}
-      <HookDiagram />
+      {/* ─────────── Journal shipping log ─────────── */}
+      <JournalFeed />
 
-      {/* ─────────── Strategy deck (Pokemon cards) ─────────── */}
-      <StrategyDeck />
-
-      {/* ─────────── Strategy race (live bars) ─────────── */}
-      <StrategyRace />
-
-      {/* ─────────── Receipt + Mode dial ─────────── */}
+      {/* ─────────── Compute Runway + Mode dial ─────────── */}
       <section className="max-w-[1180px] mx-auto px-6 pt-2 pb-14 w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-rule border border-rule">
           <div className="bg-paper">
-            <Receipt receipt={state.receipt} />
+            <StudioRunway />
           </div>
           <div className="bg-paper">
             <ModeDial mode={state.mode} isDemo={state.isDemo} />

@@ -37,26 +37,26 @@ export function HeroMetrics() {
           <Metric
             label="Total proposals"
             value={totalProposals}
-            sub="LLM-generated"
+            sub="LLM-generated upgrades"
             spark={fakeSparkFor(totalProposals, "linear")}
           />
           <Metric
-            label="Promotions executed"
+            label="Deployments shipped"
             value={totalPromotions}
-            sub="On-chain migrations"
+            sub="Autonomous deployments"
             tone="green"
             spark={fakeSparkFor(totalPromotions, "step")}
           />
           <Metric
-            label="AgentFloat pools"
-            value={pools}
-            sub="v4 hook-enabled"
-            spark={[1, 1, 1, 1, 1]}
+            label="Active projects"
+            value={3}
+            sub="Hook · LedgerMind · Equalizer"
+            spark={[1, 2, 3, 3, 3]}
           />
           <Metric
-            label="Strategies tested"
+            label="Subsystems audited"
             value={totalStrategiesTested}
-            sub={`${strategies} live · ${retiredCount} retired`}
+            sub={`${strategies} active · ${retiredCount} inactive`}
             spark={sparkData.length > 4 ? sparkData : fakeSparkFor(totalStrategiesTested, "step")}
             tone="gold"
           />

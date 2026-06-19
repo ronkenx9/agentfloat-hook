@@ -227,6 +227,41 @@ function updateProposalStatus(proposalId: string, status: string, decisionReason
   return true;
 }
 
+function getJournalEntries(limit = 10): { title: string; content: string; date: string }[] {
+  const journalDir = path.join(BRAIN_PATH, 'journal');
+  if (!fs.existsSync(journalDir)) return [];
+
+  const files = fs.readdirSync(journalDir)
+    .filter((f) => f.endsWith('.md'))
+    .sort()
+    .reverse();
+
+  const entries: { title: string; content: string; date: string }[] = [];
+
+  for (const file of files) {
+    const date = file.replace('.md', '');
+    const filepath = path.join(journalDir, file);
+    try {
+      const raw = fs.readFileSync(filepath, 'utf8');
+      const sections = raw.split(/(?:\r?\n|^)##\s+/);
+      for (const sec of sections) {
+        const trimmed = sec.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+
+        const lines = trimmed.split('\n');
+        const title = lines[0].trim();
+        const content = lines.slice(1).join('\n').trim();
+        
+        entries.push({ title, content, date });
+        if (entries.length >= limit) return entries;
+      }
+    } catch (err) {
+      console.warn(`[api] Failed to read journal ${file}:`, err);
+    }
+  }
+  return entries;
+}
+
 // ─── server ───────────────────────────────────────────────────────────────
 
 const server = http.createServer(async (req, res) => {
@@ -241,6 +276,11 @@ const server = http.createServer(async (req, res) => {
     // ── Public reads ─────────────────────────────────────────────────────
     if (req.method === 'GET' && pathname === '/api/health') {
       return send(res, 200, { ok: true, ts: new Date().toISOString() });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/journal') {
+      const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+      return send(res, 200, { journal: getJournalEntries(limit) });
     }
 
     if (req.method === 'GET' && pathname === '/api/state') {
